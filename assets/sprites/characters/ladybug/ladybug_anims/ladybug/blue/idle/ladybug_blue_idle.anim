@@ -1,0 +1,49 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "ladybug_blue_idle",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.35,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 2,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "49e1d392-efdf-4d0f-82e4-9de725e9c251"
+            }
+          },
+          {
+            "frame": 0.08333333333333333,
+            "value": {
+              "__uuid__": "7a137904-c9f7-4115-b49e-0f860ab351f8"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "49e1d392-efdf-4d0f-82e4-9de725e9c251"
+            }
+          },
+          {
+            "frame": 0.25,
+            "value": {
+              "__uuid__": "0462bdb3-85d3-4143-bbe1-ece2781d8b0a"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "0462bdb3-85d3-4143-bbe1-ece2781d8b0a"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}
