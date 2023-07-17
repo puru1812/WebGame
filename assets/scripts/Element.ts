@@ -23,7 +23,9 @@ export class Element extends Component {
     connectors = [];
     _placedItem = null;
     _connectedConnector = null;
-    index=-1;
+    index = -1;
+    _data = null;
+    
     // [2]
     // @property
     // serializableDummy = 0;
@@ -33,17 +35,78 @@ export class Element extends Component {
         this.index = id;
     }
  
+    setData(data) {
+        this.index = data["id"];
+        this.node.position = data["position"];
+        this._type = data["type"];
+        this._data = data;
+        if (this._type == "connector"){
+             this.node.on(Node.EventType.MOUSE_DOWN, () => {
+                if (!this._creator._spider && !this._creator._bettle)
+                    this._creator._connector = this.node;
+                else
+                    this._creator.dropItem(this);
+                
+          
+            }, this._creator);
+        }
+       
+    }
+    setUpData() {
+        if (this._data) {
+            if (this._data["placedItem"]) {
+              
+                for (let i = 0; i < this._creator.spiders.length; i++) {
+                    if (this._creator.spiders[i]._type == this._data["placedItem"]["type"] && (this._creator.spiders[i].index == this._data["placedItem"]["id"])){
+                        this._placedItem =this._data["placedItem"];
+                        this._creator.spiders[i].node.parent = this.node;
+                        this._creator.spiders[i].node.worldPosition = this.node.worldPosition;
+                        break;
+                    }
+                }
+                if (!this._placedItem) {
+                     for (let i = 0; i < this._creator.bettles.length; i++) {
+                    if (this._creator.bettles[i]._type == this._data["placedItem"]["type"] && (this._creator.bettles[i].index == this._data["placedItem"]["id"])){
+                        this._placedItem =this._data["placedItem"];
+                        this._creator.bettles[i].node.parent = this.node;
+                        this._creator.bettles[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+                }
+            }
+         
+                for (let i = 0; i < this._creator.connectors.length; i++) {
+                    if (this._data["connectedConnector"]&&this._creator.connectors[i].index == this._data["connectedConnector"]) {
+                        this._connectedConnector = this._creator.connectors[i];
+                    }
+                }
+            
+            
+            let connectors = this._data["connectors"];
+            if(connectors)
+            {  for (let i = 0; i < this._creator.connectors.length; i++) {
+                  for (let j = 0; j <connectors.length; j++) {
+           
+                      if (connectors[j]["index"]==(this._creator.connectors[i].index))
+                          this.connectors.push({ "connector":this._creator.connectors[i],"wireType":connectors[j]["wireType"] });
+                  }
+                }}
+        
+        }
+    }
     getData() {
         let data = {};
         data["id"] = this.index;
         if (this._placedItem) {
-            data["placedItem"] = { "type": this._placedItem.type, "id": this._placedItem.index };
+            data["placedItem"] = { "type": this._placedItem._type, "id": this._placedItem.index };
         }
         if (this.connectors.length > 0) {
             let connectors = [];
-            this.connectors.forEach(element => {
-                connectors.push(element.index);
-            });
+            for (let i = 0; i < this.connectors.length; i++)
+                connectors.push({ "index":this.connectors[i]["connector"].index, "wireType":  this.connectors[i]["wireType"] });
+            
             data["connectors"] = connectors;
         }
         if (this._connectedConnector) {

@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node,Vec3,Vec2,Graphics,instantiate,UITransform, Sprite, Color } from 'cc';
+import { _decorator, Component, Node,Vec3,Vec2,Graphics,instantiate,UITransform, Sprite, Color, EditBox } from 'cc';
 import { Element } from './Element';
 const { ccclass, property } = _decorator;
 
@@ -33,18 +33,25 @@ export class LevelCreator extends Component {
       connector: Node = null;
     @property({ type: Graphics })
     graphics: Graphics = null;
-  
+    _wireType = 0;// 0 is normal, britle, unbreakable
     connectors = [];
     spiders = [];
     bettles = [];
     _connector: Node = null;
     _spider: Node = null;
     _bettle: Node = null;
-_movingconnector: Node = null;
+    _movingconnector: Node = null;
+    _levelNumber = 0;
+    onTextChanged(x,label:EditBox) {
+        this._levelNumber = parseInt(label.textLabel.string);
+    }
     start () {
         // [3]
         this.bg.on(Node.EventType.MOUSE_MOVE, this.moveElement, this);
          this.bg.on(Node.EventType.MOUSE_DOWN, this.dropElement, this);
+    }
+    setWireType(event, id) {
+        this._wireType = id;
     }
     moveElement(event) {
         if (this._connector) {
@@ -104,29 +111,49 @@ _movingconnector: Node = null;
            
         }
     }
-    createSpider(){
+    createSpider(event,data=null){
         this._spider = instantiate(this.spider);
         this._spider.parent = this.node.parent;
         this._spider.getComponent(Element).init("spider", this,this.spiders.length);
         this._spider.active = true;
               this.spiders.push(this._spider.getComponent(Element));
-     
+        if (data)
+            this._spider.getComponent(Element).setData(data);
+       
+        return this._spider.getComponent(Element);
     }
 
-    createBettle(){
+    createBettle(event,data=null){
         this._bettle = instantiate(this.bettle);
-         this._bettle.parent = this.node.parent;
+        this._bettle.parent = this.node.parent;
         this._bettle.getComponent(Element).init("bettle", this, this.bettles.length);
           this.bettles.push(this._bettle.getComponent(Element));
         this._bettle.active = true;
+         if (data)
+            this._bettle.getComponent(Element).setData(data);
+      
+        return this._bettle.getComponent(Element);
     }
-    createConnector(){
+    createConnector(event,data=null){
         this._connector = instantiate(this.connector);
         this._connector.parent = this.node.parent;
-        
         this._connector.getComponent(Element).init("connector", this, this.connectors.length);
          this.connectors.push(this._connector.getComponent(Element));
         this._connector.active = true;
+        if (data)
+            this._connector.getComponent(Element).setData(data);
+        return this._connector.getComponent(Element);
+          
+    }
+      createPortal(event,data=null){
+        this._connector = instantiate(this.connector);
+        this._connector.parent = this.node.parent;
+        this._connector.getComponent(Element).init("connector", this, this.connectors.length);
+         this.connectors.push(this._connector.getComponent(Element));
+          this._connector.active = true;
+          if (data)
+            this._connector.getComponent(Element).setData(data);
+        return this._connector.getComponent(Element);
           
     }
     selectConnector(connector) {
@@ -136,8 +163,8 @@ _movingconnector: Node = null;
         this._movingconnector.getComponent(Sprite).color = Color.GREEN;}
         else {
             connector.getComponent(Sprite).color = Color.GREEN;
-            this._movingconnector.getComponent(Element).connectors.push(connector);
-             connector.getComponent(Element).connectors.push( this._movingconnector);
+            this._movingconnector.getComponent(Element).connectors.push({ "connector":connector,"wireType":this._wireType });
+            connector.connectors.push({ "connector":this._movingconnector,"wireType":this._wireType });
             this.connectAll();
             this._movingconnector = null;
         }
@@ -147,14 +174,19 @@ _movingconnector: Node = null;
         this.connectors.forEach(connector => {
             connector.getComponent(Sprite).color = Color.WHITE;
             connector.connectors.forEach(element => {
-                this.connectConnectors(connector, element);
+                this.connectConnectors(connector, element.connector,element.wireType);
             });
         });
     }
 
-    connectConnectors(connector1,connector2) {
-         this.graphics.lineWidth = 0.98;
-         this.graphics.strokeColor.fromHEX('#fffff0');
+    connectConnectors(connector1,connector2,wireType) {
+        this.graphics.lineWidth = 1.5;
+        switch (wireType) {
+            case "1":  this.graphics.strokeColor=Color.RED;break;
+            case "2": this.graphics.strokeColor = Color.GREEN; break;
+                default: this.graphics.strokeColor=Color.WHITE
+        }
+        
          this.graphics.moveTo(connector1.node.position.x, connector1.node.position.y);
          this.graphics.lineTo(connector2.node.position.x, connector2.node.position.y);
         
@@ -181,8 +213,87 @@ _movingconnector: Node = null;
         "bettles":bettles,
          }
         console.log("level" + JSON.stringify(level));
+        var a = document.createElement("a");
+        a.href = window.URL.createObjectURL(new Blob([JSON.stringify(level)], {type: "text/plain"}));
+        a.download = "level"+this._levelNumber+".json";
+        a.click();
         
     }
+
+    loadFile() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = e => { 
+
+   // getting a hold of the file reference
+   var file = e.target.files[0]; 
+
+   // setting up the reader
+   var reader = new FileReader();
+   reader.readAsText(file,'UTF-8');
+
+   // here we tell the reader what to do when it's done reading...
+   reader.onload = readerEvent => {
+      var content =JSON.parse(readerEvent.target.result); // this is the content!
+       console.log(content);
+        let connectors = content["connectors"];
+       this.connectors = [];
+       connectors.forEach(element => {
+               if(element)
+               this.createConnector(null,element)
+           });
+       let spiders = content["spiders"];
+       this.spiders = [];
+       spiders.forEach(element => {
+           if (element)
+               this.createSpider(null,element);
+           });
+      
+       let bettles =  content["bettles"];
+       this.bettles = [];
+       bettles.forEach(element => {
+           if (element)
+               this.createBettle(null,element);
+       });
+       this.spiders.forEach(element => {
+           element.setUpData();
+       });
+         this.bettles.forEach(element => {
+           element.setUpData();
+         });
+         this.connectors.forEach(element => {
+           element.setUpData();
+         });
+        this.connectAll();
+      // this._movingconnector = null;
+       this._spider = null;
+       this._bettle = null;
+       this._connector = null;
+      
+       
+        console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
+   }
+
+}
+input.click();
+    }
+     readTextFile(file)
+{
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                var allText = rawFile.responseText;
+                alert(allText);
+            }
+        }
+    }
+    rawFile.send(null);
+}
 
     resetLevel() {
         this.spiders.forEach(element => {
