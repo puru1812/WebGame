@@ -134,10 +134,10 @@ export class LevelCreator extends Component {
       
         return this._bettle.getComponent(Element);
     }
-    createConnector(event,data=null){
+    createConnector(event, customEventData: string,data=null){
         this._connector = instantiate(this.connector);
         this._connector.parent = this.node.parent;
-        this._connector.getComponent(Element).init("connector", this, this.connectors.length);
+           this._connector.getComponent(Element).init("connector", this, this.connectors.length,customEventData);
          this.connectors.push(this._connector.getComponent(Element));
         this._connector.active = true;
         if (data)
@@ -240,7 +240,7 @@ export class LevelCreator extends Component {
        this.connectors = [];
        connectors.forEach(element => {
                if(element)
-               this.createConnector(null,element)
+               this.createConnector(null,element.type,element)
            });
        let spiders = content["spiders"];
        this.spiders = [];

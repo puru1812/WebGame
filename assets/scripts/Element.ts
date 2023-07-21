@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node } from 'cc';
+import { _decorator, Component, Node, Sprite, SpriteFrame } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
@@ -25,12 +25,24 @@ export class Element extends Component {
     _connectedConnector = null;
     index = -1;
     _data = null;
+    _connecterType = -1;
     
     // [2]
-    // @property
-    // serializableDummy = 0;
-    init(type,creator,id) {
+     @property({type:Sprite})
+     face:Sprite = null;
+    @property({type:SpriteFrame})
+     frames:SpriteFrame[] = [];
+    init(type, creator, id,customEventData=null) {
+        
         this._type = type;
+        if (this._type == "connector") {
+            if (customEventData) {
+                this._connecterType = parseInt(customEventData);
+     
+                this.face.spriteFrame = this.frames[this._connecterType-1];
+            }
+        } 
+              
         this._creator = creator;
         this.index = id;
     }
@@ -39,6 +51,7 @@ export class Element extends Component {
         this.index = data["id"];
         this.node.position = data["position"];
         this._type = data["type"];
+       
         this._data = data;
         if (this._type == "connector"){
              this.node.on(Node.EventType.MOUSE_DOWN, () => {
@@ -92,7 +105,12 @@ export class Element extends Component {
                       if (connectors[j]["index"]==(this._creator.connectors[i].index))
                           this.connectors.push({ "connector":this._creator.connectors[i],"wireType":connectors[j]["wireType"] });
                   }
-                }}
+            }
+            }
+             if( this._data["connecterType"])
+       { this._connecterType =  this._data["connecterType"];
+         this.face.spriteFrame = this.frames[this._connecterType-1];
+        }
         
         }
     }
@@ -114,6 +132,8 @@ export class Element extends Component {
         }
         data["type"] = this._type;
         data["position"] = this.node.position;
+        if(this._connecterType>=0)
+        data["connecterType"] = this._connecterType;
         return data;
     }
     start () {
