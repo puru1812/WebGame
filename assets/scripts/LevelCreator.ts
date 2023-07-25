@@ -23,6 +23,8 @@ export class LevelCreator extends Component {
     // [2]
     // @property
     // serializableDummy = 0;
+    @property({ type: Node })
+      blockParents: Node[] = [];
       @property({ type: Node })
     bg: Node = null;
     @property({ type: Node })
@@ -42,20 +44,29 @@ export class LevelCreator extends Component {
     _bettle: Node = null;
     _movingconnector: Node = null;
     _levelNumber = 0;
+    _selectedChild = null;
     onTextChanged(x,label:EditBox) {
         this._levelNumber = parseInt(label.textLabel.string);
     }
     start () {
         // [3]
         this.bg.on(Node.EventType.MOUSE_MOVE, this.moveElement, this);
-         this.bg.on(Node.EventType.MOUSE_DOWN, this.dropElement, this);
-    }
+        this.blockParents.forEach(element => {
+            element.children.forEach(child => {
+                child.on(Node.EventType.TOUCH_START, (event) => {
+                    this._selectedChild = child;
+                    this.dropElement(event);
+            }, this);
+   
+        });
+        });
+         }
     setWireType(event, id) {
         this._wireType = id;
     }
     moveElement(event) {
         if (this._connector) {
-                  this._connector.off(Node.EventType.MOUSE_DOWN, null, this);
+                  this._connector.off(Node.EventType.TOUCH_START, null, this);
             this._connector.worldPosition = new Vec3(event.getUILocationX(), event.getUILocationY(), 0);
              this.connectAll();
         } else if (this._spider) {
@@ -70,8 +81,8 @@ export class LevelCreator extends Component {
     dropElement(event) {
         if (this._connector) {
             let element = this._connector;
-               
-            this._connector.on(Node.EventType.MOUSE_DOWN, () => {
+            this._connector.worldPosition = this._selectedChild.worldPosition;;
+            this._connector.on(Node.EventType.TOUCH_START, () => {
                 if (!this._spider && !this._bettle)
                     this._connector = element
                 else
