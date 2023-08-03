@@ -15,6 +15,7 @@ const { ccclass, property } = _decorator;
  *
  */
  
+
 @ccclass('LevelCreator')
 export class LevelCreator extends Component {
     // [1]
@@ -23,6 +24,8 @@ export class LevelCreator extends Component {
     // [2]
     // @property
     // serializableDummy = 0;
+    @property({ type: Node })
+    trash: Node = null;
     @property({ type: Node })
       blockParents: Node[] = [];
       @property({ type: Node })
@@ -45,8 +48,69 @@ export class LevelCreator extends Component {
     _movingconnector: Node = null;
     _levelNumber = 0;
     _selectedChild = null;
+    commands=[];
     onTextChanged(x,label:EditBox) {
         this._levelNumber = parseInt(label.textLabel.string);
+    }
+    undoLastMove(){
+        if(this.commands.length<=0)
+            return;
+        let command= this.commands.pop();;
+      
+        if(command.elementType=="spider"){
+            this.removeSpider(command.id);
+        }else   if(command.elementType=="bettle"){
+            this.removeBettle(command.id);
+        }else   if(command.elementType=="connector"){
+            this.removeConnector(command.id);
+        }    
+    }
+    removeSpider(index){
+        for(let i=0;i<this.spiders.length;i++){
+            if(this.spiders[i].index==index){
+                if(this.spiders[i]._connectedConnector){
+                    this.spiders[i]._connectedConnector._placedItem=null;
+                    this.spiders[i]._connectedConnector=null;
+                }
+                this.spiders[i].node.destroy();
+                this.spiders.splice(i,1);
+            }
+        }
+    }
+    removeBettle(index){
+        for(let i=0;i<this.bettles.length;i++){
+
+            if(this.bettles[i].index==index){
+                if(this.bettles[i]._connectedConnector){
+                    this.bettles[i]._connectedConnector._placedItem=null;
+                    this.bettles[i]._connectedConnector=null;
+                }
+                this.bettles[i].node.destroy();
+                this.bettles.splice(i,1);
+            }
+        }
+    }
+    removeConnector(index){
+        for(let i=0;i<this.connectors.length;i++){
+            if(this.connectors[i].index==index){
+                if(this.connectors[i]._placedItem){
+                    if(this.connectors[i]._placedItem.type=="spider"){
+                        this.removeSpider(this.connectors[i]._placedItem.index);
+                    }else{
+                        this.removeBettle(this.connectors[i]._placedItem.index);
+                    }
+                    this.connectors[i]._placedItem=null;
+                }
+                this.connectors[i].node.destroy();
+                this.connectors.splice(i,1);
+            }
+        }
+    }
+
+    addMove(command){
+      
+        this.commands.push(command);
+       
     }
     start () {
         // [3]
@@ -68,14 +132,34 @@ export class LevelCreator extends Component {
         if (this._connector) {
                   this._connector.off(Node.EventType.TOUCH_START, null, this);
             this._connector.worldPosition = new Vec3(event.getUILocationX(), event.getUILocationY(), 0);
-             this.connectAll();
+            if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._connector.worldPosition.x,this._connector.worldPosition.y)))
+            {
+                let index=this.connectors.indexOf(this._connector);
+                this.connectors.splice(index,1);
+                this._connector.destroy();
+                this._connector=null;
+            }
+            this.connectAll();
         } else if (this._spider) {
              this._spider.worldPosition =  new Vec3(event.getUILocationX(),event.getUILocationY(),0);
-      
+             if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._spider.worldPosition.x,this._spider.worldPosition.y)))
+        {
+            let index=this.spiders.indexOf(this._spider);
+            this.spiders.splice(index,1);
+            this._spider.destroy();
+            this._spider=null;
+        }
         } else if (this._bettle) {
              this._bettle.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
-      
+             if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._bettle.worldPosition.x,this._bettle.worldPosition.y)))
+             {
+                 let index=this.bettles.indexOf(this._bettle);
+                 this.bettles.splice(index,1);
+                 this._bettle.destroy();
+                 this._bettle=null;
+             }
         }
+     
     }
     
     dropElement(event) {
@@ -84,12 +168,16 @@ export class LevelCreator extends Component {
             this._connector.worldPosition = this._selectedChild.worldPosition;;
             this._connector.on(Node.EventType.TOUCH_START, () => {
                 if (!this._spider && !this._bettle)
-                    this._connector = element
-                else
+                {    this._connector = element;
+                    
+                   
+                }else
                     this.dropItem(element.getComponent(Element));
                 
           
             }, this);
+            this.addMove({elementType:"connector",id:this._connector.getComponent(Element).index});
+    
             this._connector = null;
             this.connectAll();
         }
@@ -106,9 +194,11 @@ export class LevelCreator extends Component {
                     
               
                        element.node.getComponent(Sprite).color = Color.GREEN;
-                    this._spider = null;
-                
-              
+                   
+                       this.addMove({elementType:"spider",id:this._spider.getComponent(Element).index});
+    
+                       this._spider = null;
+                  
             
         }  if (this._bettle) {
             element._placedItem = this._bettle.getComponent(Element);
@@ -118,11 +208,14 @@ export class LevelCreator extends Component {
              
                   
                      element.node.getComponent(Sprite).color = Color.GREEN;
-                    this._bettle = null;
+                     this.addMove({elementType:"bettle",id:this._bettle.getComponent(Element).index});
+     
+                     this._bettle = null;
            
         }
     }
     createSpider(event,data=null){
+      
         this._spider = instantiate(this.spider);
         this._spider.parent = this.node.parent;
         this._spider.getComponent(Element).init("spider", this,this.spiders.length);
@@ -135,6 +228,7 @@ export class LevelCreator extends Component {
     }
 
     createBettle(event,data=null){
+        
         this._bettle = instantiate(this.bettle);
         this._bettle.parent = this.node.parent;
         this._bettle.getComponent(Element).init("bettle", this, this.bettles.length);
@@ -145,7 +239,11 @@ export class LevelCreator extends Component {
       
         return this._bettle.getComponent(Element);
     }
-    createConnector(event, customEventData: string,data=null){
+    createConnectorNow(event, customEventData: string){
+        this.createConnector(customEventData);
+    }
+    createConnector( customEventData: string,data=null){
+       
         this._connector = instantiate(this.connector);
         this._connector.parent = this.node.parent;
            this._connector.getComponent(Element).init("connector", this, this.connectors.length,customEventData);
@@ -251,7 +349,7 @@ export class LevelCreator extends Component {
        this.connectors = [];
        connectors.forEach(element => {
                if(element)
-               this.createConnector(null,element.type,element)
+               this.createConnector(element.type,element)
            });
        let spiders = content["spiders"];
        this.spiders = [];
@@ -323,9 +421,7 @@ input.click();
     }
 
 
-     update (deltaTime: number) {
-    //     // [4]
-     }
+   
 }
 
 /**
