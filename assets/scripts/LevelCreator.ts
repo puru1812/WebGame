@@ -345,6 +345,7 @@ export class LevelCreator extends Component {
    reader.onload = readerEvent => {
       var content =JSON.parse(readerEvent.target.result); // this is the content!
        console.log(content);
+       this.resetLevel();
         let connectors = content["connectors"];
        this.connectors = [];
        connectors.forEach(element => {
