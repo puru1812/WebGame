@@ -23,6 +23,8 @@ export class Element extends Component {
     connectors = [];
     _placedItem = null;
     _connectedConnector = null;
+    _buttonConnector = null;
+    _holdingButton=null;
     index = -1;
     _data = null;
     _connecterType = -1;
@@ -71,7 +73,7 @@ export class Element extends Component {
               
                 for (let i = 0; i < this._creator.spiders.length; i++) {
                     if (this._creator.spiders[i]._type == this._data["placedItem"]["type"] && (this._creator.spiders[i].index == this._data["placedItem"]["id"])){
-                        this._placedItem =this._data["placedItem"];
+                        this._placedItem =this._creator.spiders[i];
                         this._creator.spiders[i].node.parent = this.node;
                         this._creator.spiders[i].node.worldPosition = this.node.worldPosition;
                         break;
@@ -80,13 +82,24 @@ export class Element extends Component {
                 if (!this._placedItem) {
                      for (let i = 0; i < this._creator.bettles.length; i++) {
                     if (this._creator.bettles[i]._type == this._data["placedItem"]["type"] && (this._creator.bettles[i].index == this._data["placedItem"]["id"])){
-                        this._placedItem =this._data["placedItem"];
+                        this._placedItem = this._creator.bettles[i];
                         this._creator.bettles[i].node.parent = this.node;
                         this._creator.bettles[i].node.worldPosition = this.node.worldPosition;
                  
                         break;
                     }
                 }
+                }
+            }
+            if (this._data["holdingButton"]) {
+                for (let i = 0; i < this._creator.buttons.length; i++) {
+                    if (this._creator.buttons[i]._type == this._data["holdingButton"]["type"] && (this._creator.buttons[i].index == this._data["holdingButton"]["id"])){
+                        this._holdingButton = this._creator.buttons[i];
+                        this._creator.buttons[i].node.parent = this.node;
+                        this._creator.buttons[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
                 }
             }
          
@@ -120,6 +133,9 @@ export class Element extends Component {
         if (this._placedItem) {
             data["placedItem"] = { "type": this._placedItem._type, "id": this._placedItem.index };
         }
+        if (this._holdingButton) {
+            data["holdingButton"] = { "type": this._holdingButton._type, "id": this._holdingButton.index};
+                }
         if (this.connectors.length > 0) {
             let connectors = [];
             for (let i = 0; i < this.connectors.length; i++)
@@ -130,6 +146,10 @@ export class Element extends Component {
         if (this._connectedConnector) {
             data["connectedConnector"] = this._connectedConnector.index;
         }
+        if (this._buttonConnector) {
+            data["buttonConnector"] = this._buttonConnector.index;
+        }
+        
         data["type"] = this._type;
         data["position"] = this.node.position;
         if(this._connecterType>=0)

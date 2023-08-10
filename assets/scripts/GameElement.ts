@@ -23,10 +23,12 @@ export class GameElement extends Component {
     connectors = [];
     _placedItem = null;
     _connectedConnector = null;
+    _buttonConnector = null;
+    _holdingButton=null;
     index = -1;
     _data = null;
     _connecterType = -1;
-    
+    neighbors=[null,null,null,null];
     // [2]
      @property({type:Sprite})
      face:Sprite = null;
@@ -56,9 +58,58 @@ export class GameElement extends Component {
        
        
     }
+    distanceTo(point1,point2)
+    {
+        var distance = Math.sqrt((Math.pow(point1.x-point2.x,2))+(Math.pow(point1.y-point2.y,2)))
+        return distance;
+    };
+    initializeNeighbours(){
+        for(let i=0;i<this._game.connectors.length;i++){
+            if(this._game.connectors[i]!=this&&this.distanceTo(this.node.worldPosition,this._game.connectors[i].node.worldPosition)<300){
+                if(this.node.worldPosition.x==this._game.connectors[i].node.worldPosition.x){
+                    if(this.node.worldPosition.y<this._game.connectors[i].node.worldPosition.y){
+                        //top
+                        this.neighbors[1]=this._game.connectors[i];
+                 
+                    }else{
+                        //bottom
+                        this.neighbors[3]=this._game.connectors[i];
+                 
+                    }
+                }else  if(this.node.worldPosition.y==this._game.connectors[i].node.worldPosition.y){
+                    if(this.node.worldPosition.x<this._game.connectors[i].node.worldPosition.x){
+                        //left
+                        this.neighbors[0]=this._game.connectors[i];
+                    }else{
+                        //right
+                        this.neighbors[2]=this._game.connectors[i];
+                 
+                    }
+             
+                }
+            }
+        }
+        
+    }
+    hasAValidNeighbor(){
+        if(!this.neighbors)
+            return null;
+        for(let i=0;i<this.neighbors.length;i++){
+            if(this.neighbors[i]!=null&&this.neighbors[i]._placedItem&&this.neighbors[i]._placedItem.type=="bettle"){
+                return this.neighbors[i];
+            }
+        }
+        for(let i=0;i<this.neighbors.length;i++){
+            if(this.neighbors[i]!=null){
+                return this.neighbors[i];
+            }
+        }
+        return null;
+    }
     SelectBlock(){
         this._game.SelectBlock(this);
     }
+    
     setUpData() {
         if (this._data) {
             if (this._data["placedItem"]) {
@@ -84,6 +135,17 @@ export class GameElement extends Component {
                 }
             }
          
+            if (this._data["holdingButton"]) {
+                for (let i = 0; i < this._game.buttons.length; i++) {
+                    if (this._game.buttons[i]._type == this._data["holdingButton"]["type"] && (this._game.buttons[i].index == this._data["holdingButton"]["id"])){
+                        this._holdingButton = this._game.buttons[i];
+                        this._game.buttons[i].node.parent = this.node;
+                        this._game.buttons[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
                 for (let i = 0; i < this._game.connectors.length; i++) {
                     if (this._data["connectedConnector"]&&this._game.connectors[i].index == this._data["connectedConnector"]) {
                         this._connectedConnector = this._game.connectors[i];
@@ -114,6 +176,9 @@ export class GameElement extends Component {
         if (this._placedItem) {
             data["placedItem"] = { "type": this._placedItem._type, "id": this._placedItem.index };
         }
+        if (this._holdingButton) {
+            data["holdingButton"] = { "type": this._holdingButton._type, "id": this._holdingButton.index};
+                }
         if (this.connectors.length > 0) {
             let connectors = [];
             for (let i = 0; i < this.connectors.length; i++)
@@ -123,6 +188,9 @@ export class GameElement extends Component {
         }
         if (this._connectedConnector) {
             data["connectedConnector"] = this._connectedConnector.index;
+        }
+        if (this._buttonConnector) {
+            data["buttonConnector"] = this._buttonConnector.index;
         }
         data["type"] = this._type;
         data["position"] = this.node.position;

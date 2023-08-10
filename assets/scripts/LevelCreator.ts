@@ -32,6 +32,10 @@ export class LevelCreator extends Component {
     bg: Node = null;
     @property({ type: Node })
     spider: Node = null;
+    @property({ type: Node })
+    button: Node = null;
+    buttons = [];
+    _button: Node = null;
       @property({ type: Node })
       bettle: Node = null;
       @property({ type: Node })
@@ -41,10 +45,12 @@ export class LevelCreator extends Component {
     _wireType = 0;// 0 is normal, britle, unbreakable
     connectors = [];
     spiders = [];
+   
     bettles = [];
     _connector: Node = null;
     _spider: Node = null;
     _bettle: Node = null;
+    
     _movingconnector: Node = null;
     _levelNumber = 0;
     _selectedChild = null;
@@ -63,7 +69,9 @@ export class LevelCreator extends Component {
             this.removeBettle(command.id);
         }else   if(command.elementType=="connector"){
             this.removeConnector(command.id);
-        }    
+        }else   if(command.elementType=="button"){
+            this.removeButton(command.id);
+        }     
     }
     removeSpider(index){
         for(let i=0;i<this.spiders.length;i++){
@@ -87,6 +95,20 @@ export class LevelCreator extends Component {
                 }
                 this.bettles[i].node.destroy();
                 this.bettles.splice(i,1);
+            }
+        }
+    }
+    removeButton(index){
+        for(let i=0;i<this.buttons.length;i++){
+
+            if(this.buttons[i].index==index){
+                if(this.buttons[i]._connectedConnector){
+                    this.buttons[i]._connectedConnector._holdingButton=null;
+                    this.buttons[i]._buttonConnector=null;
+                    this.buttons[i]._connectedConnector=null;
+                }
+                this.buttons[i].node.destroy();
+                this.buttons.splice(i,1);
             }
         }
     }
@@ -158,7 +180,16 @@ export class LevelCreator extends Component {
                  this._bettle.destroy();
                  this._bettle=null;
              }
-        }
+        } else if (this._button) {
+            this._button.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
+            if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._button.worldPosition.x,this._button.worldPosition.y)))
+            {
+                let index=this.buttons.indexOf(this._button);
+                this.buttons.splice(index,1);
+                this._button.destroy();
+                this._button=null;
+            }
+       }
      
     }
     
@@ -167,10 +198,18 @@ export class LevelCreator extends Component {
             let element = this._connector;
             this._connector.worldPosition = this._selectedChild.worldPosition;;
             this._connector.on(Node.EventType.TOUCH_START, () => {
-                if (!this._spider && !this._bettle)
+                if (!this._spider && !this._bettle&&!this._button)
                 {    this._connector = element;
                     
-                   
+                    this.blockParents.forEach(element => {
+                        element.children.forEach(child => {
+                            child.on(Node.EventType.TOUCH_START, (event) => {
+                                this._selectedChild = child;
+                                this.dropElement(event);
+                        }, this);
+               
+                    });
+                    });
                 }else
                     this.dropItem(element.getComponent(Element));
                 
@@ -193,7 +232,6 @@ export class LevelCreator extends Component {
                     this._spider.getComponent(Element)._connectedConnector = element;
                     
               
-                       element.node.getComponent(Sprite).color = Color.GREEN;
                    
                        this.addMove({elementType:"spider",id:this._spider.getComponent(Element).index});
     
@@ -207,12 +245,36 @@ export class LevelCreator extends Component {
                     this._bettle.getComponent(Element)._connectedConnector = element;
              
                   
-                     element.node.getComponent(Sprite).color = Color.GREEN;
                      this.addMove({elementType:"bettle",id:this._bettle.getComponent(Element).index});
      
                      this._bettle = null;
            
         }
+        if (this._button) {
+            element._holdingButton = this._button.getComponent(Element);
+             this._button.parent = element.node;
+        this._button.position = new Vec3(0, 0, 0);
+                    this._button.getComponent(Element)._connectedConnector = element;
+                    this._button.getComponent(Element)._connectedConnector._holdingButton= this._button.getComponent(Element);
+                  
+                     this.addMove({elementType:"button",id:this._button.getComponent(Element).index});
+     
+                   
+                     this._button.getComponent(Element)._buttonConnector= this.createConnectorNow(null,"4");
+                     this._button = null;
+        }
+    }
+
+    createButton(event,data=null){
+        this._button = instantiate(this.button);
+        this._button.parent = this.node.parent;
+        this._button.getComponent(Element).init("button", this,this.buttons.length);
+        this._button.active = true;
+              this.buttons.push(this._button.getComponent(Element));
+        if (data)
+            this._button.getComponent(Element).setData(data);
+       
+        return this._button.getComponent(Element);
     }
     createSpider(event,data=null){
       
@@ -240,7 +302,7 @@ export class LevelCreator extends Component {
         return this._bettle.getComponent(Element);
     }
     createConnectorNow(event, customEventData: string){
-        this.createConnector(customEventData);
+        return this.createConnector(customEventData);
     }
     createConnector( customEventData: string,data=null){
        
@@ -268,10 +330,8 @@ export class LevelCreator extends Component {
     selectConnector(connector) {
         this._connector = null;
         if (!this._movingconnector)
-       {     this._movingconnector = connector;
-        this._movingconnector.getComponent(Sprite).color = Color.GREEN;}
+       {     this._movingconnector = connector;}
         else {
-            connector.getComponent(Sprite).color = Color.GREEN;
             this._movingconnector.getComponent(Element).connectors.push({ "connector":connector,"wireType":this._wireType });
             connector.connectors.push({ "connector":this._movingconnector,"wireType":this._wireType });
             this.connectAll();
@@ -316,10 +376,15 @@ export class LevelCreator extends Component {
            this.bettles.forEach(element => {
                bettles.push(element.getData());
         });
+        let buttons = [];
+        this.buttons.forEach(element => {
+            buttons.push(element.getData());
+     });
          let  level = {
         "spiders": spiders,
         "connectors": connectors,
         "bettles":bettles,
+        "buttons":buttons,
          }
         console.log("level" + JSON.stringify(level));
         var a = document.createElement("a");
@@ -358,6 +423,12 @@ export class LevelCreator extends Component {
            if (element)
                this.createSpider(null,element);
            });
+           let buttons = content["buttons"];
+           this.buttons = [];
+           buttons.forEach(element => {
+               if (element)
+                   this.createButton(null,element);
+               });
       
        let bettles =  content["bettles"];
        this.bettles = [];
@@ -368,6 +439,9 @@ export class LevelCreator extends Component {
        this.spiders.forEach(element => {
            element.setUpData();
        });
+       this.buttons.forEach(element => {
+        element.setUpData();
+    });
          this.bettles.forEach(element => {
            element.setUpData();
          });
@@ -379,13 +453,23 @@ export class LevelCreator extends Component {
        this._spider = null;
        this._bettle = null;
        this._connector = null;
-      
+       this._button = null;
        
         console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
    }
 
 }
 input.click();
+this.bg.on(Node.EventType.MOUSE_MOVE, this.moveElement, this);
+this.blockParents.forEach(element => {
+    element.children.forEach(child => {
+        child.on(Node.EventType.TOUCH_START, (event) => {
+            this._selectedChild = child;
+            this.dropElement(event);
+    }, this);
+
+});
+});
     }
      readTextFile(file)
 {
@@ -414,6 +498,10 @@ input.click();
             element.node.destroy();
         });
           this.bettles = [];
+          this.buttons.forEach(element => {
+            element.node.destroy();
+        });
+          this.buttons = [];
         this.connectors.forEach(element => {
             element.node.destroy();
         });

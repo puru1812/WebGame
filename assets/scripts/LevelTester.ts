@@ -1,5 +1,5 @@
 
-import {instantiate, _decorator, Component, Node, Label } from 'cc';
+import {instantiate, _decorator, Component, Node, Label, Tween, tween, Vec3 } from 'cc';
 const { ccclass, property } = _decorator;
 import { GameElement } from './GameElement';
 /**
@@ -25,6 +25,7 @@ export class LevelTester extends Component {
     connectors = [];
     spiders = [];
     bettles = [];
+    buttons = [];
     @property({ type: Node })
     spider: Node = null;
       @property({ type: Node })
@@ -35,6 +36,14 @@ export class LevelTester extends Component {
       skipbutton: Node = null;
       @property({ type: Label })
       turnText: Label = null;
+      @property({ type: Node })
+      gameOverScreen: Node = null;
+      @property({ type: Node })
+      gameWinScreen: Node = null;
+      @property({ type: Node })
+      button: Node = null;
+      _button = null;
+      _content=null;
       _connector=null
       _spider=null;
       _bettle=null;
@@ -42,6 +51,10 @@ export class LevelTester extends Component {
 
     start () {
         // [3]
+    }
+    retryLevel(){
+        this._playerTurn=true;
+        this.readData();
     }
     TurnComplete(){
         this._playerTurn=!this._playerTurn;
@@ -55,6 +68,37 @@ export class LevelTester extends Component {
     }
     playEnemyMove(){
         this.turnText.string="Enemy Turn";
+        let found=false;
+     
+        for(let i=0;i<this.spiders.length;i++){
+            if(this.spiders[i]._connectedConnector.hasAValidNeighbor()){
+                if(!this.spiders[i]._connectedConnector){
+                    this.gameOverScreen.active=true;
+                    this.gameOverScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
+          
+                }else{
+                let chosenNeighbor=this.spiders[i]._connectedConnector.hasAValidNeighbor();
+                this.spiders[i]._connectedConnector._placedItem=null;
+                this.spiders[i]._connectedConnector=chosenNeighbor;
+                if( this.spiders[i]._connectedConnector._placedItem&&this.spiders[i]._connectedConnector._placedItem.type=="bettle"){
+                    this.gameOverScreen.active=true;
+                    this.gameOverScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
+                    
+                }
+                chosenNeighbor._placedItem= this.spiders[i];
+                this.spiders[i].node.parent=chosenNeighbor.node;
+                this.spiders[i].node.position=new Vec3(0,0,0);
+                found=true;
+                
+                break;
+            }
+            }
+        }
+        if(!found){
+            this.gameWinScreen.active=true;
+            this.gameWinScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
+            return;
+        }
         this.scheduleOnce(()=>{
             this.TurnComplete();
         },1);
@@ -97,7 +141,23 @@ export class LevelTester extends Component {
         return this._connector.getComponent(GameElement);
           
     }
+
+    
+    createButton(event,data=null){
+        this._button = instantiate(this.button);
+        this._button.parent = this.node.parent;
+        this._button.getComponent(Element).init("button", this,this.buttons.length);
+        this._button.active = true;
+              this.buttons.push(this._button.getComponent(Element));
+        if (data)
+            this._button.getComponent(Element).setData(data);
+       
+        return this._button.getComponent(Element);
+    }
+    
     resetLevel() {
+        this.gameOverScreen.active=false;
+        this.gameWinScreen.active=false;
         this.spiders.forEach(GameElement => {
             GameElement.node.destroy();
         });
@@ -106,6 +166,10 @@ export class LevelTester extends Component {
             GameElement.node.destroy();
         });
           this.bettles = [];
+          this.buttons.forEach(element => {
+            element.node.destroy();
+        });
+          this.buttons = [];
         this.connectors.forEach(GameElement => {
             GameElement.node.destroy();
         });
@@ -115,10 +179,23 @@ export class LevelTester extends Component {
     SelectBlock(block){
         if(!this._playerTurn)
             return;
-        if( block._connecterType==1)
-       {block.node.destroy();
+       
+        let found=false;
+        for(let i=0;i<this.bettles.length;i++){
+            if(this.bettles[i]._connectedConnector.isANeighbor(block)){
+                found=true;
+                this.bettles[i].parent=block.node;
+                this.bettles[i].position=new Vec3(0,0,0);
+                this.bettles[i]._connectedConnector._placedItem=null;
+                this.bettles[i]._connectedConnector=block;
+                this.bettles[i]._connectedConnector._placedItem=this.bettles[i];
+                break;
+            }
+        }
       
-        this.TurnComplete();}
+        if(found)
+        this.TurnComplete();
+    
         console.log("SelectBlock"+ block._connecterType);
     }
     Play(){
@@ -139,43 +216,7 @@ export class LevelTester extends Component {
    // here we tell the reader what to do when it's done reading...
    reader.onload = readerEvent => {
       var content =JSON.parse(readerEvent.target.result); // this is the content!
-       console.log(content);
-       this.resetLevel();
-        let connectors = content["connectors"];
-       this.connectors = [];
-       connectors.forEach(GameElement => {
-               if(GameElement)
-               this.createConnector(GameElement.type,GameElement)
-           });
-       let spiders = content["spiders"];
-       this.spiders = [];
-       spiders.forEach(GameElement => {
-           if (GameElement)
-               this.createSpider(GameElement);
-           });
-      
-       let bettles =  content["bettles"];
-       this.bettles = [];
-       bettles.forEach(GameElement => {
-           if (GameElement)
-               this.createBettle(GameElement);
-       });
-       this.spiders.forEach(GameElement => {
-           GameElement.setUpData();
-       });
-         this.bettles.forEach(GameElement => {
-           GameElement.setUpData();
-         });
-         this.connectors.forEach(GameElement => {
-           GameElement.setUpData();
-         });
-      // this._movingconnector = null;
-       this._spider = null;
-       this._bettle = null;
-       this._connector = null;
-      
-       
-        console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
+      this.readData(content);
     }
 
 }
@@ -186,7 +227,61 @@ input.click();
    
  
 
+readData(con=null){
+    if(con)
+    this._content=con;
+let content=this._content;
+    console.log(content);
+    this.resetLevel();
+     let connectors = content["connectors"];
+    this.connectors = [];
+    connectors.forEach(GameElement => {
+            if(GameElement)
+            this.createConnector(GameElement.type,GameElement)
+        });
+    let spiders = content["spiders"];
+    this.spiders = [];
+    spiders.forEach(GameElement => {
+        if (GameElement)
+            this.createSpider(GameElement);
+        });
+        let buttons = content["buttons"];
+        this.buttons = [];
+        buttons.forEach(element => {
+            if (element)
+                this.createButton(null,element);
+            });
+    let bettles =  content["bettles"];
+    this.bettles = [];
+    bettles.forEach(GameElement => {
+        if (GameElement)
+            this.createBettle(GameElement);
+    });
+    this.spiders.forEach(GameElement => {
+        GameElement.setUpData();
+    });
+    this.buttons.forEach(element => {
+        element.setUpData();
+    });
+      this.bettles.forEach(GameElement => {
+        GameElement.setUpData();
+      });
+      this.connectors.forEach(GameElement => {
+        GameElement.setUpData();
+      });
+      this.connectors.forEach(GameElement => {
+         GameElement.initializeNeighbours();
+       });
+   // this._movingconnector = null;
+    this._spider = null;
+    this._bettle = null;
+    this._connector = null;
+    this._button = null;
+   
+    
+     console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
 
+}
 
     // update (deltaTime: number) {
     //     // [4]
