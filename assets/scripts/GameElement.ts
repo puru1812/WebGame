@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Sprite, SpriteFrame } from 'cc';
+import { _decorator, Color, Component, Node, Sprite, SpriteFrame } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
@@ -28,7 +28,9 @@ export class GameElement extends Component {
     index = -1;
     _data = null;
     _connecterType = -1;
+    _hidden=false;
     neighbors=[null,null,null,null];
+    _chosenDirection=0
     // [2]
      @property({type:Sprite})
      face:Sprite = null;
@@ -53,7 +55,7 @@ export class GameElement extends Component {
         this.index = data["id"];
         this.node.position = data["position"];
         this._type = data["type"];
-       
+       this.setHidden(data["hidden"]);
         this._data = data;
        
        
@@ -65,7 +67,7 @@ export class GameElement extends Component {
     };
     initializeNeighbours(){
         for(let i=0;i<this._game.connectors.length;i++){
-            if(this._game.connectors[i]!=this&&this.distanceTo(this.node.worldPosition,this._game.connectors[i].node.worldPosition)<300){
+            if(this._game.connectors[i]!=this&&this.distanceTo(this.node.worldPosition,this._game.connectors[i].node.worldPosition)<200){
                 if(this.node.worldPosition.x==this._game.connectors[i].node.worldPosition.x){
                     if(this.node.worldPosition.y<this._game.connectors[i].node.worldPosition.y){
                         //top
@@ -77,7 +79,7 @@ export class GameElement extends Component {
                  
                     }
                 }else  if(this.node.worldPosition.y==this._game.connectors[i].node.worldPosition.y){
-                    if(this.node.worldPosition.x<this._game.connectors[i].node.worldPosition.x){
+                    if(this.node.worldPosition.x>this._game.connectors[i].node.worldPosition.x){
                         //left
                         this.neighbors[0]=this._game.connectors[i];
                     }else{
@@ -91,20 +93,126 @@ export class GameElement extends Component {
         }
         
     }
-    hasAValidNeighbor(){
+    isANeighbor(block){
+        for(let i=0;i<this.neighbors.length;i++){
+            if(this.neighbors[i]!=null&&this.neighbors[i]==block){
+                return true;
+            }
+        }
+        return false;
+    }
+    hasAValidNeighbor(bettle){
         if(!this.neighbors)
             return null;
+     
+        //left,top,bottom,right
         for(let i=0;i<this.neighbors.length;i++){
-            if(this.neighbors[i]!=null&&this.neighbors[i]._placedItem&&this.neighbors[i]._placedItem.type=="bettle"){
+            if(this.neighbors[i]!=null&&this.neighbors[i]._placedItem&&this.neighbors[i]._placedItem._type=="bettle"&&!this.neighbors[i]._hidden){
+                console.log("found bettle");
                 return this.neighbors[i];
             }
         }
-        for(let i=0;i<this.neighbors.length;i++){
-            if(this.neighbors[i]!=null){
-                return this.neighbors[i];
-            }
+            let selectedNeighbor=null;
+          ;
+           
+                if(this.neighbors[this._chosenDirection]&&!this.neighbors[this._chosenDirection]._hidden&&this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,[])){
+                    let blocks=[];
+                    this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                    selectedNeighbor=this.neighbors[this._chosenDirection];
+                   
+                }else{
+                    if(this._chosenDirection==0||this._chosenDirection==2){
+                        if(this.neighbors[1]&&!this.neighbors[1]._hidden&&this.neighbors[1].isConnectedTo(1,bettle._connectedConnector,[])){
+                            let blocks=[];
+                            this._chosenDirection=1;
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }else   if(this.neighbors[3]&&!this.neighbors[3]._hidden&&this.neighbors[3].isConnectedTo(3,bettle._connectedConnector,[])){
+                            this._chosenDirection=3;
+                            let blocks=[];
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }else   if(this._chosenDirection==0&&this.neighbors[2]&&!this.neighbors[2]._hidden&&this.neighbors[2].isConnectedTo(2,bettle._connectedConnector,[])){
+                            this._chosenDirection=2;
+                            let blocks=[];
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }else  if(this.neighbors[0]&&!this.neighbors[0]._hidden&&this.neighbors[0].isConnectedTo(0,bettle._connectedConnector,[])){
+                            this._chosenDirection=0;
+                            let blocks=[];
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }
+                      
+              
+                    }else{
+                        if(this.neighbors[2]&&!this.neighbors[2]._hidden&&this.neighbors[2].isConnectedTo(2,bettle._connectedConnector,[])){
+                            this._chosenDirection=2;
+                            let blocks=[];
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }else  if(this.neighbors[0]&&!this.neighbors[0]._hidden&&this.neighbors[0].isConnectedTo(0,bettle._connectedConnector,[])){
+                            this._chosenDirection=0;
+                            let blocks=[];
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }
+                        else if(this._chosenDirection==3&&this.neighbors[1]&&!this.neighbors[1]._hidden&&this.neighbors[1].isConnectedTo(1,bettle._connectedConnector,[])){
+                            let blocks=[];
+                            this._chosenDirection=1;
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        }else   if(this.neighbors[3]&&!this.neighbors[3]._hidden&&this.neighbors[3].isConnectedTo(3,bettle._connectedConnector,[])){
+                            this._chosenDirection=3;
+                            let blocks=[];
+                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
+                            selectedNeighbor=this.neighbors[this._chosenDirection];
+                       
+                        } 
+                    }
+                }
+            
+          
+            return selectedNeighbor;
+        
+      
+    }
+    isConnectedTo(direction,targetBlock,parsedBlocks){
+        let directions=["left","top","right","bottom"];
+        console.log("checking direction "+directions[direction]);
+        let value=false;
+        if(!this.node){
+            return false;
         }
-        return null;
+        if(parsedBlocks.indexOf(this)<0){
+        if(this==targetBlock)
+        return true;
+      
+        parsedBlocks.push(this);
+   
+        if(this.neighbors[direction]&&!this.neighbors[direction]._hidden)
+        value=value||this.neighbors[direction].isConnectedTo(direction,targetBlock,parsedBlocks)
+                
+        for(let i=0;i<this.neighbors.length;i++){
+            if(i!=direction&&this.neighbors[i]&&!this.neighbors[i]._hidden)
+            value=value||this.neighbors[i].isConnectedTo(i,targetBlock,parsedBlocks)
+    
+        }
+        
+
+    }
+        console.log("checking direction return"+value);
+       
+                 return value;
+        
+       
     }
     SelectBlock(){
         this._game.SelectBlock(this);
@@ -150,6 +258,9 @@ export class GameElement extends Component {
                     if (this._data["connectedConnector"]&&this._game.connectors[i].index == this._data["connectedConnector"]) {
                         this._connectedConnector = this._game.connectors[i];
                     }
+                    if (this._data["buttonConnector"]&&this._game.connectors[i].index == this._data["buttonConnector"]) {
+                        this._buttonConnector = this._game.connectors[i];
+                    }
                 }
             
             
@@ -161,6 +272,7 @@ export class GameElement extends Component {
                       if (connectors[j]["index"]==(this._game.connectors[i].index))
                           this.connectors.push({ "connector":this._game.connectors[i],"wireType":connectors[j]["wireType"] });
                   }
+                  
             }
             }
              if( this._data["connecterType"])
@@ -170,38 +282,20 @@ export class GameElement extends Component {
         
         }
     }
-    getData() {
-        let data = {};
-        data["id"] = this.index;
-        if (this._placedItem) {
-            data["placedItem"] = { "type": this._placedItem._type, "id": this._placedItem.index };
-        }
-        if (this._holdingButton) {
-            data["holdingButton"] = { "type": this._holdingButton._type, "id": this._holdingButton.index};
-                }
-        if (this.connectors.length > 0) {
-            let connectors = [];
-            for (let i = 0; i < this.connectors.length; i++)
-                connectors.push({ "index":this.connectors[i]["connector"].index, "wireType":  this.connectors[i]["wireType"] });
-            
-            data["connectors"] = connectors;
-        }
-        if (this._connectedConnector) {
-            data["connectedConnector"] = this._connectedConnector.index;
-        }
-        if (this._buttonConnector) {
-            data["buttonConnector"] = this._buttonConnector.index;
-        }
-        data["type"] = this._type;
-        data["position"] = this.node.position;
-        if(this._connecterType>=0)
-        data["connecterType"] = this._connecterType;
-        return data;
-    }
+    
     start () {
         // [3]
     }
   
+    setHidden(hide) {
+        //     // [4]
+        this._hidden=hide;
+        if(!this._hidden){
+            this.node.getComponent(Sprite).color =Color.WHITE;
+        }else{
+            this.node.active=false;
+        }
+        }
   
 
     // update (deltaTime: number) {

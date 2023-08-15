@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Sprite, SpriteFrame } from 'cc';
+import { _decorator, Color, Component, Label, Node, Sprite, SpriteFrame } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
@@ -28,14 +28,16 @@ export class Element extends Component {
     index = -1;
     _data = null;
     _connecterType = -1;
-    
+    _hidden=false;
     // [2]
+    @property({type:Label})
+    text:Label = null;
      @property({type:Sprite})
      face:Sprite = null;
     @property({type:SpriteFrame})
      frames:SpriteFrame[] = [];
     init(type, creator, id,customEventData=null) {
-        
+      
         this._type = type;
         if (this._type == "connector") {
             if (customEventData) {
@@ -53,18 +55,9 @@ export class Element extends Component {
         this.index = data["id"];
         this.node.position = data["position"];
         this._type = data["type"];
-       
+        this.setHidden(data["hidden"]);
         this._data = data;
-        if (this._type == "connector"){
-             this.node.on(Node.EventType.MOUSE_DOWN, () => {
-                if (!this._creator._spider && !this._creator._bettle)
-                    this._creator._connector = this.node;
-                else
-                    this._creator.dropItem(this);
-                
-          
-            }, this._creator);
-        }
+       
        
     }
     setUpData() {
@@ -95,6 +88,7 @@ export class Element extends Component {
                 for (let i = 0; i < this._creator.buttons.length; i++) {
                     if (this._creator.buttons[i]._type == this._data["holdingButton"]["type"] && (this._creator.buttons[i].index == this._data["holdingButton"]["id"])){
                         this._holdingButton = this._creator.buttons[i];
+                        this.text.string= ""+this._creator.buttons[i].index;
                         this._creator.buttons[i].node.parent = this.node;
                         this._creator.buttons[i].node.worldPosition = this.node.worldPosition;
                  
@@ -106,6 +100,10 @@ export class Element extends Component {
                 for (let i = 0; i < this._creator.connectors.length; i++) {
                     if (this._data["connectedConnector"]&&this._creator.connectors[i].index == this._data["connectedConnector"]) {
                         this._connectedConnector = this._creator.connectors[i];
+                    }
+                    if (this._data["buttonConnector"]&&this._creator.connectors[i].index == this._data["buttonConnector"]) {
+                        this._buttonConnector = this._creator.connectors[i];
+                        this._creator.connectors[i].text.string=""+this.index;
                     }
                 }
             
@@ -149,7 +147,7 @@ export class Element extends Component {
         if (this._buttonConnector) {
             data["buttonConnector"] = this._buttonConnector.index;
         }
-        
+        data["hidden"] = this._hidden;
         data["type"] = this._type;
         data["position"] = this.node.position;
         if(this._connecterType>=0)
@@ -164,9 +162,15 @@ export class Element extends Component {
     }
   
 
-    // update (deltaTime: number) {
+     setHidden(hide) {
     //     // [4]
-    // }
+    this._hidden=hide;
+    if(!this._hidden){
+        this.node.getComponent(Sprite).color =Color.WHITE;
+    }else{
+        this.node.getComponent(Sprite).color =new Color(255,255,255,100);
+    }
+    }
 }
 
 /**

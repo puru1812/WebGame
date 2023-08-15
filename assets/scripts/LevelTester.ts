@@ -69,28 +69,30 @@ export class LevelTester extends Component {
     playEnemyMove(){
         this.turnText.string="Enemy Turn";
         let found=false;
-     
+        this.scheduleOnce(()=>{
         for(let i=0;i<this.spiders.length;i++){
-            if(this.spiders[i]._connectedConnector.hasAValidNeighbor()){
+            if(this.spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[i])){
                 if(!this.spiders[i]._connectedConnector){
                     this.gameOverScreen.active=true;
-                    this.gameOverScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
+                    this.gameOverScreen.setSiblingIndex(this.gameOverScreen.parent.children.length+1);
           
                 }else{
-                let chosenNeighbor=this.spiders[i]._connectedConnector.hasAValidNeighbor();
-                this.spiders[i]._connectedConnector._placedItem=null;
-                this.spiders[i]._connectedConnector=chosenNeighbor;
-                if( this.spiders[i]._connectedConnector._placedItem&&this.spiders[i]._connectedConnector._placedItem.type=="bettle"){
+                let chosenNeighbor=this.spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[i]);
+           
+                 this.spiders[i]._connectedConnector=chosenNeighbor;
+                if( this.spiders[i]._connectedConnector._placedItem&&this.spiders[i]._connectedConnector._placedItem._type=="bettle"){
                     this.gameOverScreen.active=true;
-                    this.gameOverScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
+                    this.gameOverScreen.setSiblingIndex(this.gameOverScreen.parent.children.length+1);
                     
                 }
+                this.spiders[i]._connectedConnector._placedItem=null;
+               
                 chosenNeighbor._placedItem= this.spiders[i];
                 this.spiders[i].node.parent=chosenNeighbor.node;
                 this.spiders[i].node.position=new Vec3(0,0,0);
                 found=true;
                 
-                break;
+                break; 
             }
             }
         }
@@ -99,7 +101,7 @@ export class LevelTester extends Component {
             this.gameWinScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
             return;
         }
-        this.scheduleOnce(()=>{
+       
             this.TurnComplete();
         },1);
     }
@@ -146,13 +148,13 @@ export class LevelTester extends Component {
     createButton(event,data=null){
         this._button = instantiate(this.button);
         this._button.parent = this.node.parent;
-        this._button.getComponent(Element).init("button", this,this.buttons.length);
+        this._button.getComponent(GameElement).init("button", this,this.buttons.length);
         this._button.active = true;
-              this.buttons.push(this._button.getComponent(Element));
+              this.buttons.push(this._button.getComponent(GameElement ));
         if (data)
-            this._button.getComponent(Element).setData(data);
+            this._button.getComponent(GameElement).setData(data);
        
-        return this._button.getComponent(Element);
+        return this._button.getComponent(GameElement);
     }
     
     resetLevel() {
@@ -184,11 +186,26 @@ export class LevelTester extends Component {
         for(let i=0;i<this.bettles.length;i++){
             if(this.bettles[i]._connectedConnector.isANeighbor(block)){
                 found=true;
-                this.bettles[i].parent=block.node;
-                this.bettles[i].position=new Vec3(0,0,0);
+                this.bettles[i].node.parent=block.node;
+                this.bettles[i].node.position=new Vec3(0,0,0);
                 this.bettles[i]._connectedConnector._placedItem=null;
+                if( this.bettles[i]._connectedConnector._connecterType==2){
+                    let index=this.connectors.indexOf(this.bettles[i]._connectedConnector);
+                    this.connectors.splice(index,1);
+                    this.bettles[i]._connectedConnector.node.destroy();
+                }
                 this.bettles[i]._connectedConnector=block;
                 this.bettles[i]._connectedConnector._placedItem=this.bettles[i];
+                if(this.bettles[i]._connectedConnector._holdingButton){
+                    this.bettles[i]._connectedConnector._holdingButton._buttonConnector.node.active=true;
+                    this.bettles[i]._connectedConnector._holdingButton._buttonConnector._hidden=false;
+                }
+                if( this.bettles[i]._connectedConnector._connecterType==3){
+                    this.gameWinScreen.active=true;
+                    this.gameWinScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
+   
+                    return;
+                }
                 break;
             }
         }
