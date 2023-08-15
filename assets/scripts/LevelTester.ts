@@ -26,8 +26,11 @@ export class LevelTester extends Component {
     spiders = [];
     bettles = [];
     buttons = [];
+    portals = [];
     @property({ type: Node })
     spider: Node = null;
+    @property({ type: Node })
+    portal: Node = null;
       @property({ type: Node })
       bettle: Node = null;
       @property({ type: Node })
@@ -46,6 +49,7 @@ export class LevelTester extends Component {
       _content=null;
       _connector=null
       _spider=null;
+      _portal=null;
       _bettle=null;
       _playerTurn=true;
 
@@ -79,14 +83,19 @@ export class LevelTester extends Component {
                 }else{
                 let chosenNeighbor=this.spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[i]);
            
-                 this.spiders[i]._connectedConnector=chosenNeighbor;
+                 
+                this.spiders[i]._connectedConnector._placedItem=null;
+                if( this.spiders[i]._connectedConnector._connecterType==2){
+                    let index=this.connectors.indexOf(this.spiders[i]._connectedConnector);
+                    this.connectors.splice(index,1);
+                    this.spiders[i]._connectedConnector.node.destroy();
+                }
+                this.spiders[i]._connectedConnector=chosenNeighbor;
                 if( this.spiders[i]._connectedConnector._placedItem&&this.spiders[i]._connectedConnector._placedItem._type=="bettle"){
                     this.gameOverScreen.active=true;
                     this.gameOverScreen.setSiblingIndex(this.gameOverScreen.parent.children.length+1);
                     
                 }
-                this.spiders[i]._connectedConnector._placedItem=null;
-               
                 chosenNeighbor._placedItem= this.spiders[i];
                 this.spiders[i].node.parent=chosenNeighbor.node;
                 this.spiders[i].node.position=new Vec3(0,0,0);
@@ -131,6 +140,18 @@ export class LevelTester extends Component {
         return this._bettle.getComponent(GameElement);
     }
     
+    createPortal(event,data=null){
+        this._portal = instantiate(this.portal);
+        this._portal.parent = this.node.parent;
+        this._portal.getComponent(GameElement).init("portal", this, this.portals.length);
+         this.portals.push(this._portal.getComponent(GameElement));
+          this._portal.active = true;
+          if (data)
+            this._portal.getComponent(GameElement).setData(data);
+        return this._portal.getComponent(GameElement);
+          
+    }
+
     createConnector(type,data=null){
        
         this._connector = instantiate(this.connector);
@@ -172,6 +193,10 @@ export class LevelTester extends Component {
             element.node.destroy();
         });
           this.buttons = [];
+          this.portals.forEach(element => {
+            element.node.destroy();
+        });
+          this.portals = [];
         this.connectors.forEach(GameElement => {
             GameElement.node.destroy();
         });
@@ -200,6 +225,7 @@ export class LevelTester extends Component {
                     this.bettles[i]._connectedConnector._holdingButton._buttonConnector.node.active=true;
                     this.bettles[i]._connectedConnector._holdingButton._buttonConnector._hidden=false;
                 }
+               
                 if( this.bettles[i]._connectedConnector._connecterType==3){
                     this.gameWinScreen.active=true;
                     this.gameWinScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
@@ -263,17 +289,29 @@ let content=this._content;
             this.createSpider(GameElement);
         });
         let buttons = content["buttons"];
-        this.buttons = [];
+        if(buttons)
+        {
+            this.buttons = [];
         buttons.forEach(element => {
             if (element)
                 this.createButton(null,element);
             });
+        }
     let bettles =  content["bettles"];
     this.bettles = [];
     bettles.forEach(GameElement => {
         if (GameElement)
             this.createBettle(GameElement);
     });
+    let portals = content["portals"];
+        if(portals)
+        {
+            this.portals = [];
+            portals.forEach(element => {
+            if (element)
+                this.createPortal(null,element);
+            });
+        }
     this.spiders.forEach(GameElement => {
         GameElement.setUpData();
     });
@@ -286,6 +324,9 @@ let content=this._content;
       this.connectors.forEach(GameElement => {
         GameElement.setUpData();
       });
+      this.portals.forEach(GameElement => {
+        GameElement.setUpData();
+      });
       this.connectors.forEach(GameElement => {
          GameElement.initializeNeighbours();
        });
@@ -294,6 +335,7 @@ let content=this._content;
     this._bettle = null;
     this._connector = null;
     this._button = null;
+    this._portal = null;
    
     
      console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);

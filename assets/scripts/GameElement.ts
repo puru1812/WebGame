@@ -25,6 +25,8 @@ export class GameElement extends Component {
     _connectedConnector = null;
     _buttonConnector = null;
     _holdingButton=null;
+    _portal=null;
+    _connectedPortal=null;
     index = -1;
     _data = null;
     _connecterType = -1;
@@ -98,6 +100,10 @@ export class GameElement extends Component {
                 return true;
             }
         }
+        if(this._portal){
+            if(this._portal._connectedPortal._connectedConnector==block)
+                return true;
+        }
         return false;
     }
     hasAValidNeighbor(bettle){
@@ -127,6 +133,21 @@ export class GameElement extends Component {
                     }
                 }
             }
+            if(this._portal){
+                let blocks=[];
+                console.log("portal direction found is"+this._portal._connectedPortal._connectedConnector.isConnectedTo(0,bettle._connectedConnector,[]));
+                  
+                if(this._portal._connectedPortal._connectedConnector&&(this._portal._connectedPortal._connectedConnector.isConnectedTo(0,bettle._connectedConnector,blocks)==true)){
+                   
+                     let count=blocks.length;
+                    if(count<minCount)
+                    {
+                        selectedNeighbor=this._portal._connectedPortal._connectedConnector;
+                        minCount=count;
+                    }
+                }
+                
+            }                                                                                                                                                                                                                   
           
             return selectedNeighbor;
         
@@ -165,7 +186,10 @@ export class GameElement extends Component {
             value=value||this.neighbors[i].isConnectedTo(i,targetBlock,parsedBlocks)
     
         }
-        
+      
+        if(this._portal)
+        value=value||this._portal._connectedPortal._connectedConnector.isConnectedTo(0,targetBlock,parsedBlocks)
+    
 
     }
        // console.log("checking direction return"+value);
@@ -211,6 +235,29 @@ export class GameElement extends Component {
                         this._game.buttons[i].node.worldPosition = this.node.worldPosition;
                  
                         break;
+                    }
+                }
+            }
+            if (this._data["portal"]) {
+              
+                for (let i = 0; i < this._game.portals.length; i++) {
+                    if (this._game.portals[i]._type == this._data["portal"]["type"] && (this._game.portals[i].index == this._data["portal"]["id"])){
+                        this._portal = this._game.portals[i];
+                       
+                        this._game.portals[i].node.parent = this.node;
+                        this._game.portals[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
+            if (this._data["connectedPortal"]) {
+               
+                for (let i = 0; i < this._game.portals.length; i++) {
+                    if ( this._game.portals[i].index == this._data["connectedPortal"]){
+                        this._connectedPortal = this._game.portals[i];
+                        this._game.portals[i]._connectedPortal=this;;
+                        
                     }
                 }
             }

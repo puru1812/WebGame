@@ -25,6 +25,8 @@ export class Element extends Component {
     _connectedConnector = null;
     _buttonConnector = null;
     _holdingButton=null;
+    _portal=null;
+    _connectedPortal=null;
     index = -1;
     _data = null;
     _connecterType = -1;
@@ -55,6 +57,7 @@ export class Element extends Component {
         this.index = data["id"];
         this.node.position = data["position"];
         this._type = data["type"];
+        if(data["hidden"])
         this.setHidden(data["hidden"]);
         this._data = data;
        
@@ -96,16 +99,22 @@ export class Element extends Component {
                     }
                 }
             }
-         
-                for (let i = 0; i < this._creator.connectors.length; i++) {
-                    if (this._data["connectedConnector"]&&this._creator.connectors[i].index == this._data["connectedConnector"]) {
-                        this._connectedConnector = this._creator.connectors[i];
-                    }
-                    if (this._data["buttonConnector"]&&this._creator.connectors[i].index == this._data["buttonConnector"]) {
-                        this._buttonConnector = this._creator.connectors[i];
-                        this._creator.connectors[i].text.string=""+this.index;
+            if (this._data["portal"]) {
+              
+                for (let i = 0; i < this._creator.portals.length; i++) {
+                    if (this._creator.portals[i]._type == this._data["portal"]["type"] && (this._creator.portals[i].index == this._data["portal"]["id"])){
+                        this._portal = this._creator.portals[i];
+                       
+                        this._creator.portals[i].node.parent = this.node;
+                        this._creator.portals[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
                     }
                 }
+            }
+           
+         
+               
             
             
             let connectors = this._data["connectors"];
@@ -117,7 +126,32 @@ export class Element extends Component {
                           this.connectors.push({ "connector":this._creator.connectors[i],"wireType":connectors[j]["wireType"] });
                   }
             }
+
             }
+            if (this._data["connectedPortal"]) {
+               
+                for (let i = 0; i < this._creator.portals.length; i++) {
+                    if ( this._creator.portals[i].index == this._data["connectedPortal"]){
+                        this._connectedPortal = this._creator.portals[i];
+                        this._creator.portals[i]._connectedPortal=this;;
+                        
+                    }
+                }
+            }
+            if(this._type=="button"||this._type=="portal")
+            console.log("has"+JSON.stringify(this._data));
+            
+                if (this._data["connectedConnector"]!=null) {
+                    console.log("has connectedConnector"+this._data["connectedConnector"]);
+                    this._connectedConnector = this._creator.connectors[this._data["connectedConnector"]];
+                }
+                if (this._data["buttonConnector"]!=null) {
+                    console.log("has buttonConnector"+this._data["buttonConnector"]);
+              
+                    this._buttonConnector = this._creator.connectors[this._data["buttonConnector"]];
+                    this._creator.connectors[this._data["buttonConnector"]].text.string=""+this.index;
+                }
+            
              if( this._data["connecterType"])
        { this._connecterType =  this._data["connecterType"];
          this.face.spriteFrame = this.frames[this._connecterType-1];
@@ -134,6 +168,9 @@ export class Element extends Component {
         if (this._holdingButton) {
             data["holdingButton"] = { "type": this._holdingButton._type, "id": this._holdingButton.index};
                 }
+          if (this._portal) {
+            data["portal"] = { "type": this._portal._type, "id": this._portal.index};
+          }
         if (this.connectors.length > 0) {
             let connectors = [];
             for (let i = 0; i < this.connectors.length; i++)
@@ -146,6 +183,9 @@ export class Element extends Component {
         }
         if (this._buttonConnector) {
             data["buttonConnector"] = this._buttonConnector.index;
+        }
+        if (this._connectedPortal) {
+            data["connectedPortal"] = this._connectedPortal.index;
         }
         data["hidden"] = this._hidden;
         data["type"] = this._type;

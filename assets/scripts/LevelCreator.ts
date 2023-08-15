@@ -34,8 +34,12 @@ export class LevelCreator extends Component {
     spider: Node = null;
     @property({ type: Node })
     button: Node = null;
+    @property({ type: Node })
+    portal: Node = null;
     buttons = [];
     _button: Node = null;
+    portals = [];
+    _portal: Node = null;
       @property({ type: Node })
       bettle: Node = null;
       @property({ type: Node })
@@ -54,6 +58,8 @@ export class LevelCreator extends Component {
     _movingconnector: Node = null;
     _levelNumber = 0;
     _selectedChild = null;
+    _previousPortal=null;
+    _portalCount=0;
     commands=[];
     onTextChanged(x,label:EditBox) {
         this._levelNumber = parseInt(label.textLabel.string);
@@ -71,6 +77,8 @@ export class LevelCreator extends Component {
             this.removeConnector(command.id);
         }else   if(command.elementType=="button"){
             this.removeButton(command.id);
+        } else   if(command.elementType=="portal"){
+            this.removePortal(command.id);
         }     
     }
     removeSpider(index){
@@ -82,6 +90,18 @@ export class LevelCreator extends Component {
                 }
                 this.spiders[i].node.destroy();
                 this.spiders.splice(i,1);
+            }
+        }
+    }
+    removePortal(index){
+        for(let i=0;i<this.portals.length;i++){
+            if(this.portals[i].index==index){
+                if(this.portals[i]._connectedConnector){
+                    this.portals[i]._connectedConnector._portal=null;
+                    this.portals[i]._connectedConnector=null;
+                }
+                this.portals[i].node.destroy();
+                this.portals.splice(i,1);
             }
         }
     }
@@ -104,8 +124,10 @@ export class LevelCreator extends Component {
             if(this.buttons[i].index==index){
                 if(this.buttons[i]._connectedConnector){
                     this.buttons[i]._connectedConnector._holdingButton=null;
+                    this.removeConnector(this.buttons[i]._buttonConnector);
                     this.buttons[i]._buttonConnector=null;
                     this.buttons[i]._connectedConnector=null;
+                    
                 }
                 this.buttons[i].node.destroy();
                 this.buttons.splice(i,1);
@@ -122,6 +144,12 @@ export class LevelCreator extends Component {
                         this.removeBettle(this.connectors[i]._placedItem.index);
                     }
                     this.connectors[i]._placedItem=null;
+                }
+                if(this.connectors[i]._holdingButton){
+                    this.removeButton(this.connectors[i]._holdingButton);
+                }
+                if(this.connectors[i]._portal){
+                    this.removePortal(this.connectors[i]._portal);
                 }
                 this.connectors[i].node.destroy();
                 this.connectors.splice(i,1);
@@ -189,7 +217,16 @@ export class LevelCreator extends Component {
                 this._button.destroy();
                 this._button=null;
             }
-       }
+       }else if (this._portal) {
+        this._portal.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
+        if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._portal.worldPosition.x,this._portal.worldPosition.y)))
+        {
+            let index=this.buttons.indexOf(this._portal);
+            this.portals.splice(index,1);
+            this._portal.destroy();
+            this._portal=null;
+        }
+   }
      
     }
     
@@ -198,7 +235,7 @@ export class LevelCreator extends Component {
             let element = this._connector;
             this._connector.worldPosition = this._selectedChild.worldPosition;;
             this._connector.on(Node.EventType.TOUCH_START, () => {
-                if (!this._spider && !this._bettle&&!this._button)
+                if (!this._spider && !this._bettle&&!this._button&&!this._portal)
                 {    this._connector = element;
                     
                 
@@ -257,6 +294,24 @@ export class LevelCreator extends Component {
                     this._button = null;
                    
                 }
+                if (this._portal) {
+                    element._portal = this._portal.getComponent(Element);
+                     this._portal.parent = element.node;
+                        this._portal.position = new Vec3(0, 0, 0);
+                            this._portal.getComponent(Element)._connectedConnector = element;
+                            this._portal.getComponent(Element)._connectedConnector._portal= this._portal.getComponent(Element);
+                             this.addMove({elementType:"portal",id:this._portal.getComponent(Element).index});
+                            if(this._previousPortal){
+                                this._portal.getComponent(Element)._connectedPortal=this._previousPortal;
+                                this._portal.getComponent(Element)._connectedConnector.text.string=this._portalCount+"";
+                                this._previousPortal._connectedPortal= this._portal.getComponent(Element);
+                                this._previousPortal._connectedConnector.text.string=this._portalCount+"";
+                                this._portalCount++;
+                            }else{
+                                this._previousPortal= this._portal.getComponent(Element);
+                            }
+                             this._portal = null;
+                    }
     }
 
     createButton(event,data=null){
@@ -313,14 +368,14 @@ export class LevelCreator extends Component {
           
     }
       createPortal(event,data=null){
-        this._connector = instantiate(this.connector);
-        this._connector.parent = this.node.parent;
-        this._connector.getComponent(Element).init("connector", this, this.connectors.length);
-         this.connectors.push(this._connector.getComponent(Element));
-          this._connector.active = true;
+        this._portal = instantiate(this.portal);
+        this._portal.parent = this.node.parent;
+        this._portal.getComponent(Element).init("portal", this, this.portals.length);
+         this.portals.push(this._portal.getComponent(Element));
+          this._portal.active = true;
           if (data)
-            this._connector.getComponent(Element).setData(data);
-        return this._connector.getComponent(Element);
+            this._portal.getComponent(Element).setData(data);
+        return this._portal.getComponent(Element);
           
     }
     selectConnector(connector) {
@@ -375,11 +430,16 @@ export class LevelCreator extends Component {
         this.buttons.forEach(element => {
             buttons.push(element.getData());
      });
+     let portals = [];
+     this.portals.forEach(element => {
+        portals.push(element.getData());
+  });
          let  level = {
         "spiders": spiders,
         "connectors": connectors,
         "bettles":bettles,
         "buttons":buttons,
+        "portals":portals,
          }
         console.log("level" + JSON.stringify(level));
         var a = document.createElement("a");
@@ -410,11 +470,12 @@ export class LevelCreator extends Component {
        this.connectors = [];
 
 let self=this;
-       connectors.forEach(element => {
+for(let i=0;i<connectors.length;i++){
+    let element=connectors[i];
                if(element){
                let connector=self.createConnector(element.type,element);
                connector.node.on(Node.EventType.TOUCH_START, () => {
-                if (!self._spider && !self._bettle&&!self._button)
+                if (!self._spider && !self._bettle&&!self._button&&!self._portal)
                 {    
                 
                     self._connector =  connector.node;
@@ -425,9 +486,10 @@ let self=this;
                 
           
             }, self);
-            }
+        }
+            
           
-           });
+  }  
        let spiders = content["spiders"];
        this.spiders = [];
        spiders.forEach(element => {
@@ -435,11 +497,19 @@ let self=this;
                this.createSpider(null,element);
            });
            let buttons = content["buttons"];
-           this.buttons = [];
+           if(buttons)
+          { this.buttons = [];
            buttons.forEach(element => {
                if (element)
                    this.createButton(null,element);
-               });
+               });}
+               let portals = content["portals"];
+               if(portals)
+               {this.portals = [];
+               portals.forEach(element => {
+                   if (element)
+                       this.createPortal(null,element);
+                   });}
       
        let bettles =  content["bettles"];
        this.bettles = [];
@@ -447,25 +517,45 @@ let self=this;
            if (element)
                this.createBettle(null,element);
        });
-       this.spiders.forEach(element => {
-           element.setUpData();
-       });
-       this.buttons.forEach(element => {
-        element.setUpData();
-    });
-         this.bettles.forEach(element => {
-           element.setUpData();
-         });
-         this.connectors.forEach(element => {
-           element.setUpData();
-         });
+       for(let i=0;i<this.connectors.length;i++){
+        this.connectors[i].setUpData();
+       }
+       for(let i=0;i<this.spiders.length;i++){
+        this.spiders[i].setUpData();
+       }
+       for(let i=0;i<this.buttons.length;i++){
+        this.buttons[i].setUpData();
+       }
+       for(let i=0;i<this.bettles.length;i++){
+        this.bettles[i].setUpData();
+       }
+       for(let i=0;i<this.portals.length;i++){
+        this.portals[i].setUpData();
+       }
+      
+       let k=0;
+       let parsedPortals=[];
+       for(let i=0;i<this.portals.length;i++){
+        let element=this.portals[i];
+        if(parsedPortals.indexOf(element<0)){
+            if( element._connectedConnector)
+        element._connectedConnector.text.string=""+k;
+        if( element._connectedPortal._connectedConnector)
+        element._connectedPortal._connectedConnector.text.string=""+k;
+        k++;
+        parsedPortals.push(element);
+        parsedPortals.push( element._connectedPortal);
+        }
+       }
+         
+      
        // this.connectAll();
      this._movingconnector = null;
        this._spider = null;
        this._bettle = null;
        this._connector = null;
        this._button = null;
-       
+       this._portal = null;
         console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
    }
 
@@ -504,6 +594,10 @@ input.click();
             element.node.destroy();
         });
           this.buttons = [];
+          this.portals.forEach(element => {
+            element.node.destroy();
+        });
+          this.portals = [];
         this.connectors.forEach(element => {
             element.node.destroy();
         });
