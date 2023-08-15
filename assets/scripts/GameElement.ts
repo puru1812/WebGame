@@ -30,7 +30,6 @@ export class GameElement extends Component {
     _connecterType = -1;
     _hidden=false;
     neighbors=[null,null,null,null];
-    _chosenDirection=0
     // [2]
      @property({type:Sprite})
      face:Sprite = null;
@@ -113,72 +112,21 @@ export class GameElement extends Component {
             }
         }
             let selectedNeighbor=null;
-          ;
-           
-                if(this.neighbors[this._chosenDirection]&&!this.neighbors[this._chosenDirection]._hidden&&this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,[])){
-                    let blocks=[];
-                    this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                    selectedNeighbor=this.neighbors[this._chosenDirection];
+            let minCount=100;
+            let directions=["left","top","right","bottom"];
+            for(let i=0;i<this.neighbors.length;i++){
+                let blocks=[];
+                if(this.neighbors[i]&&(this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,blocks)==true)){
                    
-                }else{
-                    if(this._chosenDirection==0||this._chosenDirection==2){
-                        if(this.neighbors[1]&&!this.neighbors[1]._hidden&&this.neighbors[1].isConnectedTo(1,bettle._connectedConnector,[])){
-                            let blocks=[];
-                            this._chosenDirection=1;
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }else   if(this.neighbors[3]&&!this.neighbors[3]._hidden&&this.neighbors[3].isConnectedTo(3,bettle._connectedConnector,[])){
-                            this._chosenDirection=3;
-                            let blocks=[];
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }else   if(this._chosenDirection==0&&this.neighbors[2]&&!this.neighbors[2]._hidden&&this.neighbors[2].isConnectedTo(2,bettle._connectedConnector,[])){
-                            this._chosenDirection=2;
-                            let blocks=[];
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }else  if(this.neighbors[0]&&!this.neighbors[0]._hidden&&this.neighbors[0].isConnectedTo(0,bettle._connectedConnector,[])){
-                            this._chosenDirection=0;
-                            let blocks=[];
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }
-                      
-              
-                    }else{
-                        if(this.neighbors[2]&&!this.neighbors[2]._hidden&&this.neighbors[2].isConnectedTo(2,bettle._connectedConnector,[])){
-                            this._chosenDirection=2;
-                            let blocks=[];
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }else  if(this.neighbors[0]&&!this.neighbors[0]._hidden&&this.neighbors[0].isConnectedTo(0,bettle._connectedConnector,[])){
-                            this._chosenDirection=0;
-                            let blocks=[];
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }
-                        else if(this._chosenDirection==3&&this.neighbors[1]&&!this.neighbors[1]._hidden&&this.neighbors[1].isConnectedTo(1,bettle._connectedConnector,[])){
-                            let blocks=[];
-                            this._chosenDirection=1;
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        }else   if(this.neighbors[3]&&!this.neighbors[3]._hidden&&this.neighbors[3].isConnectedTo(3,bettle._connectedConnector,[])){
-                            this._chosenDirection=3;
-                            let blocks=[];
-                            this.neighbors[this._chosenDirection].isConnectedTo(this._chosenDirection,bettle._connectedConnector,blocks);
-                            selectedNeighbor=this.neighbors[this._chosenDirection];
-                       
-                        } 
+                    console.log(directions[i]+"direction found is"+this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,[]));
+                    let count=blocks.length;
+                    if(count<minCount)
+                    {
+                        selectedNeighbor=this.neighbors[i];
+                        minCount=count;
                     }
                 }
-            
+            }
           
             return selectedNeighbor;
         
@@ -188,7 +136,7 @@ export class GameElement extends Component {
         let directions=["left","top","right","bottom"];
         console.log("checking direction "+directions[direction]);
         let value=false;
-        if(!this.node){
+        if(!this.node||this._hidden){
             return false;
         }
         if(parsedBlocks.indexOf(this)<0){
@@ -199,19 +147,31 @@ export class GameElement extends Component {
    
         if(this.neighbors[direction]&&!this.neighbors[direction]._hidden)
         value=value||this.neighbors[direction].isConnectedTo(direction,targetBlock,parsedBlocks)
-                
+        
+        let otherDirection=0;
+        if(direction==0){
+            otherDirection=2;
+        }else if(direction==2){
+            otherDirection=0;
+        }else if(direction==1){
+            otherDirection=3;
+        }else{
+            otherDirection=1;
+        }
+
         for(let i=0;i<this.neighbors.length;i++){
-            if(i!=direction&&this.neighbors[i]&&!this.neighbors[i]._hidden)
+            
+            if(i!=direction&&i!=otherDirection&&this.neighbors[i]&&!this.neighbors[i]._hidden)
             value=value||this.neighbors[i].isConnectedTo(i,targetBlock,parsedBlocks)
     
         }
         
 
     }
-        console.log("checking direction return"+value);
-       
+       // console.log("checking direction return"+value);
+      
                  return value;
-        
+       
        
     }
     SelectBlock(){
