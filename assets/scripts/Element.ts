@@ -25,6 +25,8 @@ export class Element extends Component {
     _connectedConnector = null;
     _buttonConnector = null;
     _holdingButton=null;
+    _holdingCoin=null;
+    _holdingCookie=null;
     _portal=null;
     _connectedPortal=null;
     index = -1;
@@ -99,6 +101,28 @@ export class Element extends Component {
                     }
                 }
             }
+            if (this._data["holdingCoin"]) {
+                for (let i = 0; i < this._creator.coins.length; i++) {
+                    if (this._creator.coins[i]._type == this._data["holdingCoin"]["type"] && (this._creator.coins[i].index == this._data["holdingCoin"]["id"])){
+                        this._holdingCoin = this._creator.coins[i];
+                        this._creator.coins[i].node.parent = this.node;
+                        this._creator.coins[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
+            if (this._data["holdingCookie"]) {
+                for (let i = 0; i < this._creator.cookies.length; i++) {
+                    if (this._creator.cookies[i]._type == this._data["holdingCookie"]["type"] && (this._creator.cookies[i].index == this._data["holdingCookie"]["id"])){
+                        this._holdingCookie = this._creator.cookies[i];
+                        this._creator.cookies[i].node.parent = this.node;
+                        this._creator.cookies[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
             if (this._data["portal"]) {
               
                 for (let i = 0; i < this._creator.portals.length; i++) {
@@ -168,6 +192,12 @@ export class Element extends Component {
         if (this._holdingButton) {
             data["holdingButton"] = { "type": this._holdingButton._type, "id": this._holdingButton.index};
                 }
+        if (this._holdingCookie) {
+            data["holdingCookie"] = { "type": this._holdingCookie._type, "id": this._holdingCookie.index};
+        }
+        if (this._holdingCoin) {
+            data["holdingCoin"] = { "type": this._holdingCoin._type, "id": this._holdingCoin.index};
+        }
           if (this._portal) {
             data["portal"] = { "type": this._portal._type, "id": this._portal.index};
           }

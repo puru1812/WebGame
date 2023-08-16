@@ -27,6 +27,8 @@ export class GameElement extends Component {
     _holdingButton=null;
     _portal=null;
     _connectedPortal=null;
+    _holdingCookie=null;
+    _holdingCoin=null;
     index = -1;
     _data = null;
     _connecterType = -1;
@@ -233,6 +235,28 @@ export class GameElement extends Component {
                         this._holdingButton = this._game.buttons[i];
                         this._game.buttons[i].node.parent = this.node;
                         this._game.buttons[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
+            if (this._data["holdingCoin"]) {
+                for (let i = 0; i < this._game.coins.length; i++) {
+                    if (this._game.coins[i]._type == this._data["holdingCoin"]["type"] && (this._game.coins[i].index == this._data["holdingCoin"]["id"])){
+                        this._holdingCoin = this._game.coins[i];
+                        this._game.coins[i].node.parent = this.node;
+                        this._game.coins[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
+            if (this._data["holdingCookie"]) {
+                for (let i = 0; i < this._game.cookies.length; i++) {
+                    if (this._game.cookies[i]._type == this._data["holdingCookie"]["type"] && (this._game.cookies[i].index == this._data["holdingCookie"]["id"])){
+                        this._holdingCookie = this._game.cookies[i];
+                        this._game.cookies[i].node.parent = this.node;
+                        this._game.cookies[i].node.worldPosition = this.node.worldPosition;
                  
                         break;
                     }

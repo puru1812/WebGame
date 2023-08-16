@@ -27,6 +27,12 @@ export class LevelTester extends Component {
     bettles = [];
     buttons = [];
     portals = [];
+    coins = [];
+    cookies = [];
+    @property({ type: Node })
+    coin: Node = null;
+    @property({ type: Node })
+    cookie: Node = null;
     @property({ type: Node })
     spider: Node = null;
     @property({ type: Node })
@@ -45,14 +51,38 @@ export class LevelTester extends Component {
       gameWinScreen: Node = null;
       @property({ type: Node })
       button: Node = null;
+      @property({ type: Label })
+      coinText: Label = null;
+      @property({ type: Label })
+      cookieText: Label = null;
+      @property({ type: Label })
+      friendsText: Label = null;
       _button = null;
       _content=null;
       _connector=null
       _spider=null;
       _portal=null;
+      _cookie=null;
+      _coin=null;
       _bettle=null;
       _playerTurn=true;
+      collectedCoins=0;
+    collectedCookies = 0;
+    _holdingBomb = null;
+    _holdingHammer = null;
+    _holdingSmoke = null;
 
+    CreateBomb() {
+        
+    }
+
+    CreateHammer() {
+        
+    }
+    
+     CreateSmoke() {
+        
+    }
     start () {
         // [3]
     }
@@ -214,7 +244,8 @@ export class LevelTester extends Component {
                 this.bettles[i].node.parent=block.node;
                 this.bettles[i].node.position=new Vec3(0,0,0);
                 this.bettles[i]._connectedConnector._placedItem=null;
-                if( this.bettles[i]._connectedConnector._connecterType==2){
+                if (this.bettles[i]._connectedConnector._connecterType == 2) {
+                    
                     let index=this.connectors.indexOf(this.bettles[i]._connectedConnector);
                     this.connectors.splice(index,1);
                     this.bettles[i]._connectedConnector.node.destroy();
@@ -225,6 +256,20 @@ export class LevelTester extends Component {
                     this.bettles[i]._connectedConnector._holdingButton._buttonConnector.node.active=true;
                     this.bettles[i]._connectedConnector._holdingButton._buttonConnector._hidden=false;
                 }
+
+                if(this.bettles[i]._connectedConnector._holdingCoin){
+                    this.bettles[i]._connectedConnector._holdingCoin.node.active = true;
+                       this.collectedCoins++;
+                    this.coinText.string = this.collectedCoins +"/"+ this.coins.length;
+                    this.bettles[i]._connectedConnector._holdingCoin.node.active = false;
+                }
+
+                if(this.bettles[i]._connectedConnector._holdingCookie){
+                    this.bettles[i]._connectedConnector._holdingCookie.node.active = true;
+                         this.collectedCookies++;
+                    this.cookieText.string = this.collectedCookies +"/"+ this.cookies.length;
+                    this.bettles[i]._connectedConnector._holdingCookie.node.active = false;
+                     }
                
                 if( this.bettles[i]._connectedConnector._connecterType==3){
                     this.gameWinScreen.active=true;
@@ -270,6 +315,29 @@ input.click();
    
  
 
+    createCookie(event,data=null){
+        this._cookie = instantiate(this.cookie);
+        this._cookie.parent = this.node.parent;
+        this._cookie.getComponent(GameElement).init("cookie", this, this.cookies.length);
+         this.cookies.push(this._cookie.getComponent(GameElement));
+          this._cookie.active = true;
+          if (data)
+            this._cookie.getComponent(GameElement).setData(data);
+        return this._cookie.getComponent(GameElement);
+          
+    }
+    
+    createCoin(event,data=null){
+        this._coin = instantiate(this.coin);
+        this._coin.parent = this.node.parent;
+        this._coin.getComponent(GameElement).init("coin", this, this.coins.length);
+         this.coins.push(this._coin.getComponent(GameElement));
+          this._coin.active = true;
+          if (data)
+            this._coin.getComponent(GameElement).setData(data);
+        return this._coin.getComponent(GameElement);
+          
+    }
 readData(con=null){
     if(con)
     this._content=con;
@@ -303,6 +371,18 @@ let content=this._content;
         if (GameElement)
             this.createBettle(GameElement);
     });
+    let coins =  content["coins"];
+    this.coins = [];
+    coins.forEach(GameElement => {
+        if (GameElement)
+            this.createCoin(GameElement);
+    });
+    let cookies =  content["cookies"];
+    this.cookies = [];
+    cookies.forEach(GameElement => {
+        if (GameElement)
+            this.createCookie(GameElement);
+    });
     let portals = content["portals"];
         if(portals)
         {
@@ -327,6 +407,12 @@ let content=this._content;
       this.portals.forEach(GameElement => {
         GameElement.setUpData();
       });
+      this.coins.forEach(GameElement => {
+        GameElement.setUpData();
+      });
+      this.cookies.forEach(GameElement => {
+        GameElement.setUpData();
+      });
       this.connectors.forEach(GameElement => {
          GameElement.initializeNeighbours();
        });
@@ -335,7 +421,13 @@ let content=this._content;
     this._bettle = null;
     this._connector = null;
     this._button = null;
+    this._coin = null;
+    this._cookie = null;
     this._portal = null;
+    this.collectedCoins=0;
+    this.collectedCookies=0;
+    this.coinText.string=this.collectedCoins+"/"+this.coins.length;
+    this.cookieText.string=this.collectedCookies+"/"+this.coins.length;
    
     
      console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);

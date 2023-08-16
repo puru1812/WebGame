@@ -36,10 +36,16 @@ export class LevelCreator extends Component {
     button: Node = null;
     @property({ type: Node })
     portal: Node = null;
+    @property({ type: Node })
+    coin: Node = null;
+    @property({ type: Node })
+    cookie: Node = null;
     buttons = [];
     _button: Node = null;
     portals = [];
     _portal: Node = null;
+    _coin: Node = null;
+    _cookie: Node = null;
       @property({ type: Node })
       bettle: Node = null;
       @property({ type: Node })
@@ -49,7 +55,8 @@ export class LevelCreator extends Component {
     _wireType = 0;// 0 is normal, britle, unbreakable
     connectors = [];
     spiders = [];
-   
+    coins = [];
+    cookies = [];
     bettles = [];
     _connector: Node = null;
     _spider: Node = null;
@@ -79,7 +86,11 @@ export class LevelCreator extends Component {
             this.removeButton(command.id);
         } else   if(command.elementType=="portal"){
             this.removePortal(command.id);
-        }     
+        }   else   if(command.elementType=="cookie"){
+            this.removePortal(command.id);
+        }  else   if(command.elementType=="coin"){
+            this.removePortal(command.id);
+        }    
     }
     removeSpider(index){
         for(let i=0;i<this.spiders.length;i++){
@@ -134,6 +145,34 @@ export class LevelCreator extends Component {
             }
         }
     }
+    removeCoin(index){
+        for(let i=0;i<this.coins.length;i++){
+
+            if(this.coins[i].index==index){
+                if(this.coins[i]._connectedConnector){
+                    this.coins[i]._connectedConnector._holdingCoin=null;
+                    this.coins[i]._connectedConnector=null;
+                    
+                }
+                this.coins[i].node.destroy();
+                this.coins.splice(i,1);
+            }
+        }
+    }
+    removeCookie(index){
+        for(let i=0;i<this.cookies.length;i++){
+
+            if(this.cookies[i].index==index){
+                if(this.cookies[i]._connectedConnector){
+                    this.cookies[i]._connectedConnector._holdingCookie=null;
+                    this.cookies[i]._connectedConnector=null;
+                    
+                }
+                this.cookies[i].node.destroy();
+                this.cookies.splice(i,1);
+            }
+        }
+    }
     removeConnector(index){
         for(let i=0;i<this.connectors.length;i++){
             if(this.connectors[i].index==index){
@@ -150,6 +189,12 @@ export class LevelCreator extends Component {
                 }
                 if(this.connectors[i]._portal){
                     this.removePortal(this.connectors[i]._portal);
+                }
+                if(this.connectors[i]._holdingCoin){
+                    this.removeButton(this.connectors[i]._holdingCoin);
+                }
+                if(this.connectors[i]._holdingCookie){
+                    this.removeButton(this.connectors[i]._holdingCookie);
                 }
                 this.connectors[i].node.destroy();
                 this.connectors.splice(i,1);
@@ -184,9 +229,8 @@ export class LevelCreator extends Component {
             this._connector.worldPosition = new Vec3(event.getUILocationX(), event.getUILocationY(), 0);
             if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._connector.worldPosition.x,this._connector.worldPosition.y)))
             {
-                let index=this.connectors.indexOf(this._connector);
-                this.connectors.splice(index,1);
-                this._connector.destroy();
+                this.removeConnector(this._connector.getComponent(Element).index);
+           
                 this._connector=null;
             }
            // this.connectAll();
@@ -194,39 +238,46 @@ export class LevelCreator extends Component {
              this._spider.worldPosition =  new Vec3(event.getUILocationX(),event.getUILocationY(),0);
              if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._spider.worldPosition.x,this._spider.worldPosition.y)))
         {
-            let index=this.spiders.indexOf(this._spider);
-            this.spiders.splice(index,1);
-            this._spider.destroy();
+            this.removeSpider(this._spider.getComponent(Element).index);;
             this._spider=null;
         }
         } else if (this._bettle) {
              this._bettle.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
              if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._bettle.worldPosition.x,this._bettle.worldPosition.y)))
              {
-                 let index=this.bettles.indexOf(this._bettle);
-                 this.bettles.splice(index,1);
-                 this._bettle.destroy();
+                this.removeBettle(this._bettle.getComponent(Element).index);
                  this._bettle=null;
              }
         } else if (this._button) {
             this._button.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
             if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._button.worldPosition.x,this._button.worldPosition.y)))
             {
-                let index=this.buttons.indexOf(this._button);
-                this.buttons.splice(index,1);
-                this._button.destroy();
+                
+                    this.removeButton(this._button.getComponent(Element).index);
                 this._button=null;
             }
        }else if (this._portal) {
         this._portal.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
         if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._portal.worldPosition.x,this._portal.worldPosition.y)))
         {
-            let index=this.buttons.indexOf(this._portal);
-            this.portals.splice(index,1);
-            this._portal.destroy();
+            this.removePortal(this._portal.getComponent(Element).index);
             this._portal=null;
         }
-   }
+   }else if (this._cookie) {
+    this._cookie.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
+    if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._cookie.worldPosition.x,this._cookie.worldPosition.y)))
+    {
+        this.removeCookie(this._cookie.getComponent(Element).index);
+        this._cookie=null;
+    }
+}else if (this._coin) {
+    this._coin.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
+    if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._coin.worldPosition.x,this._coin.worldPosition.y)))
+    {
+        this.removeCoin(this._coin.getComponent(Element).index);
+        this._coin=null;
+    }
+}
      
     }
     
@@ -235,7 +286,7 @@ export class LevelCreator extends Component {
             let element = this._connector;
             this._connector.worldPosition = this._selectedChild.worldPosition;;
             this._connector.on(Node.EventType.TOUCH_START, () => {
-                if (!this._spider && !this._bettle&&!this._button&&!this._portal)
+                if (!this._spider && !this._bettle&&!this._button&&!this._portal&&!this._coin&&!this._cookie)
                 {    this._connector = element;
                     
                 
@@ -279,6 +330,30 @@ export class LevelCreator extends Component {
                      this._bettle = null;
            
         }
+        if (this._coin) {
+            element._holdingCoin = this._coin.getComponent(Element);
+             this._coin.parent = element.node;
+        this._coin.position = new Vec3(0, 0, 0);
+                    this._coin.getComponent(Element)._connectedConnector = element;
+             
+                  
+                     this.addMove({elementType:"coin",id:this._coin.getComponent(Element).index});
+     
+                     this._coin = null;
+           
+        }
+        if (this._cookie) {
+            element._holdingCookie = this._cookie.getComponent(Element);
+             this._cookie.parent = element.node;
+        this._cookie.position = new Vec3(0, 0, 0);
+                    this._cookie.getComponent(Element)._connectedConnector = element;
+             
+                  
+                     this.addMove({elementType:"cookie",id:this._cookie.getComponent(Element).index});
+     
+                     this._cookie = null;
+           
+        }
         if (this._button) {
             element._holdingButton = this._button.getComponent(Element);
              this._button.parent = element.node;
@@ -307,6 +382,7 @@ export class LevelCreator extends Component {
                                 this._previousPortal._connectedPortal= this._portal.getComponent(Element);
                                 this._previousPortal._connectedConnector.text.string=this._portalCount+"";
                                 this._portalCount++;
+                                this._previousPortal = null;
                             }else{
                                 this._previousPortal= this._portal.getComponent(Element);
                             }
@@ -365,6 +441,29 @@ export class LevelCreator extends Component {
      
            
         return this._connector.getComponent(Element);
+          
+    }
+    createCookie(event,data=null){
+        this._cookie = instantiate(this.cookie);
+        this._cookie.parent = this.node.parent;
+        this._cookie.getComponent(Element).init("cookie", this, this.cookies.length);
+         this.cookies.push(this._cookie.getComponent(Element));
+          this._cookie.active = true;
+          if (data)
+            this._cookie.getComponent(Element).setData(data);
+        return this._cookie.getComponent(Element);
+          
+    }
+    
+    createCoin(event,data=null){
+        this._coin = instantiate(this.coin);
+        this._coin.parent = this.node.parent;
+        this._coin.getComponent(Element).init("coin", this, this.coins.length);
+         this.coins.push(this._coin.getComponent(Element));
+          this._coin.active = true;
+          if (data)
+            this._coin.getComponent(Element).setData(data);
+        return this._coin.getComponent(Element);
           
     }
       createPortal(event,data=null){
@@ -430,6 +529,14 @@ export class LevelCreator extends Component {
         this.buttons.forEach(element => {
             buttons.push(element.getData());
      });
+     let coins = [];
+     this.coins.forEach(element => {
+        coins.push(element.getData());
+  });
+  let cookies = [];
+  this.cookies.forEach(element => {
+    cookies.push(element.getData());
+});
      let portals = [];
      this.portals.forEach(element => {
         portals.push(element.getData());
@@ -440,6 +547,8 @@ export class LevelCreator extends Component {
         "bettles":bettles,
         "buttons":buttons,
         "portals":portals,
+        "coins":coins,
+        "cookies":cookies,
          }
         console.log("level" + JSON.stringify(level));
         var a = document.createElement("a");
@@ -475,7 +584,7 @@ for(let i=0;i<connectors.length;i++){
                if(element){
                let connector=self.createConnector(element.type,element);
                connector.node.on(Node.EventType.TOUCH_START, () => {
-                if (!self._spider && !self._bettle&&!self._button&&!self._portal)
+                if (!self._spider && !self._bettle&&!self._button&&!self._portal&&!self._cookie&&!self._coin)
                 {    
                 
                     self._connector =  connector.node;
@@ -510,6 +619,20 @@ for(let i=0;i<connectors.length;i++){
                    if (element)
                        this.createPortal(null,element);
                    });}
+                   let cookies = content["cookies"];
+                   if(cookies)
+                   {this.cookies = [];
+                    cookies.forEach(element => {
+                       if (element)
+                           this.createCookie(null,element);
+                       });}
+                       let coins = content["coins"];
+                       if(coins)
+                       {this.coins = [];
+                        coins.forEach(element => {
+                           if (element)
+                               this.createCoin(null,element);
+                           });}
       
        let bettles =  content["bettles"];
        this.bettles = [];
@@ -531,6 +654,12 @@ for(let i=0;i<connectors.length;i++){
        }
        for(let i=0;i<this.portals.length;i++){
         this.portals[i].setUpData();
+       }
+       for(let i=0;i<this.coins.length;i++){
+        this.coins[i].setUpData();
+       }
+       for(let i=0;i<this.cookies.length;i++){
+        this.cookies[i].setUpData();
        }
       
        let k=0;
@@ -556,6 +685,8 @@ for(let i=0;i<connectors.length;i++){
        this._connector = null;
        this._button = null;
        this._portal = null;
+       this._coin = null;
+       this._cookie = null;
         console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
    }
 
@@ -602,6 +733,14 @@ input.click();
             element.node.destroy();
         });
         this.connectors = [];
+        this.cookies.forEach(element => {
+            element.node.destroy();
+        });
+        this.cookies = [];
+        this.coins.forEach(element => {
+            element.node.destroy();
+        });
+        this.coins = [];
         this.graphics.clear();
     }
 
