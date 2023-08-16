@@ -51,6 +51,12 @@ export class LevelTester extends Component {
       gameWinScreen: Node = null;
       @property({ type: Node })
       button: Node = null;
+     @property({ type: Node })
+     bomb: Node = null;
+     @property({ type: Node })
+     hammer: Node = null;
+     @property({ type: Node })
+      smokebomb: Node = null;
       @property({ type: Label })
       coinText: Label = null;
       @property({ type: Label })
@@ -73,15 +79,32 @@ export class LevelTester extends Component {
     _holdingSmoke = null;
 
     CreateBomb() {
-        
+        if (this._holdingBomb||this._holdingHammer||this._holdingSmoke)
+            return;
+        this._holdingBomb = instantiate(this.bomb);
+        this._holdingBomb.active = true;
+        this._holdingBomb.parent = this.node;
+        this._holdingBomb.worldPosition = this.bomb.worldPosition;
+   
     }
 
     CreateHammer() {
-        
+           if (this._holdingBomb||this._holdingHammer||this._holdingSmoke)
+               return;
+        this._holdingHammer = instantiate(this.hammer);
+         this._holdingHammer.active = true;
+           this._holdingHammer.parent = this.node;
+        this._holdingHammer.worldPosition = this.hammer.worldPosition;
+   
     }
     
      CreateSmoke() {
-        
+           if (this._holdingBomb||this._holdingHammer||this._holdingSmoke)
+               return;
+         this._holdingSmoke = instantiate(this.smokebomb);
+          this._holdingSmoke.active = true;
+            this._holdingSmoke.parent = this.node;
+        this._holdingSmoke.worldPosition = this.smokebomb.worldPosition;
     }
     start () {
         // [3]
@@ -236,7 +259,27 @@ export class LevelTester extends Component {
     SelectBlock(block){
         if(!this._playerTurn)
             return;
+          if(!block||!block.node)
+            return;
        
+        if (block._connecterType == 1) {
+            if (this._holdingBomb&&!block._placedItem) {
+                let pos = this.node._uiProps.uiTransformComp.convertToNodeSpaceAR(block.node.worldPosition);
+                this._holdingBomb.setSiblingIndex(this._holdingBomb.parent.children.length + 1);
+                tween(this._holdingBomb).to(0.1, { position: pos, scale: new Vec3(1.5, 1.5, 1.5) }).delay(0.1).
+                    call(() => {
+                        let index=this.connectors.indexOf(block);
+                        this.connectors.splice(index,1);
+                        block.node.destroy();
+                        this._holdingBomb.destroy();
+                        this._holdingBomb = null;
+                    })
+                    .start();
+              
+                return;
+            }
+        }
+
         let found=false;
         for(let i=0;i<this.bettles.length;i++){
             if(this.bettles[i]._connectedConnector.isANeighbor(block)){
@@ -277,6 +320,7 @@ export class LevelTester extends Component {
    
                     return;
                 }
+             
                 break;
             }
         }
@@ -371,18 +415,23 @@ let content=this._content;
         if (GameElement)
             this.createBettle(GameElement);
     });
-    let coins =  content["coins"];
-    this.coins = [];
-    coins.forEach(GameElement => {
-        if (GameElement)
-            this.createCoin(GameElement);
-    });
-    let cookies =  content["cookies"];
-    this.cookies = [];
-    cookies.forEach(GameElement => {
-        if (GameElement)
-            this.createCookie(GameElement);
-    });
+    let coins = content["coins"];
+    if (coins) {
+        this.coins = [];
+        coins.forEach(GameElement => {
+            if (GameElement)
+                this.createCoin(GameElement);
+        });
+    }
+
+    let cookies = content["cookies"];
+        if (cookies) {
+        this.cookies = [];
+        cookies.forEach(GameElement => {
+            if (GameElement)
+                this.createCookie(GameElement);
+        });
+    }
     let portals = content["portals"];
         if(portals)
         {
@@ -428,7 +477,7 @@ let content=this._content;
     this.collectedCookies=0;
     this.coinText.string=this.collectedCoins+"/"+this.coins.length;
     this.cookieText.string=this.collectedCookies+"/"+this.coins.length;
-   
+    this.skipbutton.active = true;
     
      console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
 

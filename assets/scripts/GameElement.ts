@@ -286,10 +286,10 @@ export class GameElement extends Component {
                 }
             }
                 for (let i = 0; i < this._game.connectors.length; i++) {
-                    if (this._data["connectedConnector"]&&this._game.connectors[i].index == this._data["connectedConnector"]) {
+                    if (this._data["connectedConnector"]!=null&&this._game.connectors[i].index == this._data["connectedConnector"]) {
                         this._connectedConnector = this._game.connectors[i];
                     }
-                    if (this._data["buttonConnector"]&&this._game.connectors[i].index == this._data["buttonConnector"]) {
+                    if (this._data["buttonConnector"]!=null&&this._game.connectors[i].index == this._data["buttonConnector"]) {
                         this._buttonConnector = this._game.connectors[i];
                     }
                 }
