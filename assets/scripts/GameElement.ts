@@ -27,13 +27,15 @@ export class GameElement extends Component {
     _holdingButton=null;
     _portal=null;
     _connectedPortal=null;
-    _holdingCookie=null;
+    _holdingCookie = null;
+    _holdingTreasure = null;
     _holdingCoin=null;
     index = -1;
     _data = null;
     _connecterType = -1;
     _hidden=false;
-    neighbors=[null,null,null,null];
+    neighbors = [null, null, null, null];
+    _sleeping = false;
     // [2]
      @property({type:Sprite})
      face:Sprite = null;
@@ -114,7 +116,7 @@ export class GameElement extends Component {
      
         //left,top,bottom,right
         for(let i=0;i<this.neighbors.length;i++){
-            if(this.neighbors[i]!=null&&this.neighbors[i]._placedItem&&this.neighbors[i]._placedItem._type=="bettle"&&!this.neighbors[i]._hidden){
+            if(this.neighbors[i]!=null&&this.neighbors[i]._placedItem&&this.neighbors[i]._placedItem._type=="bettle"&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
                 console.log("found bettle");
                 return this.neighbors[i];
             }
@@ -124,7 +126,7 @@ export class GameElement extends Component {
             let directions=["left","top","right","bottom"];
             for(let i=0;i<this.neighbors.length;i++){
                 let blocks=[];
-                if(this.neighbors[i]&&(this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,blocks)==true)){
+                if(this.neighbors[i]&&(this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,blocks)==true)&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
                    
                     console.log(directions[i]+"direction found is"+this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,[]));
                     let count=blocks.length;
@@ -257,6 +259,17 @@ export class GameElement extends Component {
                         this._holdingCookie = this._game.cookies[i];
                         this._game.cookies[i].node.parent = this.node;
                         this._game.cookies[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
+              if (this._data["holdingTreasure"]) {
+                for (let i = 0; i < this._game.treasures.length; i++) {
+                    if (this._game.treasures[i]._type == this._data["holdingTreasure"]["type"] && (this._game.treasures[i].index == this._data["holdingTreasure"]["id"])){
+                        this._holdingTreasure = this._game.treasures[i];
+                        this._game.treasures[i].node.parent = this.node;
+                        this._game.treasures[i].node.worldPosition = this.node.worldPosition;
                  
                         break;
                     }

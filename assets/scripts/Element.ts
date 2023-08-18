@@ -25,14 +25,16 @@ export class Element extends Component {
     _connectedConnector = null;
     _buttonConnector = null;
     _holdingButton=null;
-    _holdingCoin=null;
+    _holdingCoin = null;
+    _holdingTreasure = null;
     _holdingCookie=null;
     _portal=null;
     _connectedPortal=null;
     index = -1;
     _data = null;
     _connecterType = -1;
-    _hidden=false;
+    _hidden = false;
+    _trapped = false;
     // [2]
     @property({type:Label})
     text:Label = null;
@@ -46,7 +48,6 @@ export class Element extends Component {
         if (this._type == "connector") {
             if (customEventData) {
                 this._connecterType = parseInt(customEventData);
-     
                 this.face.spriteFrame = this.frames[this._connecterType-1];
             }
         } 
@@ -123,6 +124,18 @@ export class Element extends Component {
                     }
                 }
             }
+
+             if (this._data["holdingTreasure"]) {
+                for (let i = 0; i < this._creator.treasures.length; i++) {
+                    if (this._creator.treasures[i]._type == this._data["holdingTreasure"]["type"] && (this._creator.treasures[i].index == this._data["holdingTreasure"]["id"])){
+                        this._holdingTreasure = this._creator.treasures[i];
+                        this._creator.treasures[i].node.parent = this.node;
+                        this._creator.treasures[i].node.worldPosition = this.node.worldPosition;
+                 
+                        break;
+                    }
+                }
+            }
             if (this._data["portal"]) {
               
                 for (let i = 0; i < this._creator.portals.length; i++) {
@@ -136,11 +149,7 @@ export class Element extends Component {
                     }
                 }
             }
-           
-         
-               
-            
-            
+    
             let connectors = this._data["connectors"];
             if(connectors)
             {  for (let i = 0; i < this._creator.connectors.length; i++) {
@@ -194,6 +203,9 @@ export class Element extends Component {
                 }
         if (this._holdingCookie) {
             data["holdingCookie"] = { "type": this._holdingCookie._type, "id": this._holdingCookie.index};
+        }
+        if (this._holdingTreasure) {
+            data["holdingTreasure"] = { "type": this._holdingTreasure._type, "id": this._holdingTreasure.index};
         }
         if (this._holdingCoin) {
             data["holdingCoin"] = { "type": this._holdingCoin._type, "id": this._holdingCoin.index};

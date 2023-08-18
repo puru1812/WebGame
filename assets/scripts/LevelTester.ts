@@ -1,5 +1,5 @@
 
-import {instantiate, _decorator, Component, Node, Label, Tween, tween, Vec3 } from 'cc';
+import {instantiate, _decorator, Component, Node, Label, Tween, tween, Vec3, Sprite, SpriteFrame } from 'cc';
 const { ccclass, property } = _decorator;
 import { GameElement } from './GameElement';
 /**
@@ -29,10 +29,13 @@ export class LevelTester extends Component {
     portals = [];
     coins = [];
     cookies = [];
+     treasures = [];
     @property({ type: Node })
     coin: Node = null;
     @property({ type: Node })
     cookie: Node = null;
+     @property({ type: Node })
+    treasure: Node = null;
     @property({ type: Node })
     spider: Node = null;
     @property({ type: Node })
@@ -55,6 +58,8 @@ export class LevelTester extends Component {
      bomb: Node = null;
      @property({ type: Node })
      hammer: Node = null;
+     @property({ type: SpriteFrame })
+    treasureFrame: SpriteFrame = null;
      @property({ type: Node })
       smokebomb: Node = null;
       @property({ type: Label })
@@ -68,7 +73,8 @@ export class LevelTester extends Component {
       _connector=null
       _spider=null;
       _portal=null;
-      _cookie=null;
+    _cookie = null;
+    _treasure = null;
       _coin=null;
       _bettle=null;
       _playerTurn=true;
@@ -79,33 +85,34 @@ export class LevelTester extends Component {
     _holdingSmoke = null;
 
     CreateBomb() {
-        if (this._holdingBomb||this._holdingHammer||this._holdingSmoke)
+        if (this._holdingBomb)
             return;
         this._holdingBomb = instantiate(this.bomb);
-        this._holdingBomb.active = true;
+         this._holdingBomb.active = true;
         this._holdingBomb.parent = this.node;
         this._holdingBomb.worldPosition = this.bomb.worldPosition;
-   
+    return this._holdingBomb;
     }
 
     CreateHammer() {
-           if (this._holdingBomb||this._holdingHammer||this._holdingSmoke)
+           if (this._holdingHammer)
                return;
         this._holdingHammer = instantiate(this.hammer);
          this._holdingHammer.active = true;
            this._holdingHammer.parent = this.node;
         this._holdingHammer.worldPosition = this.hammer.worldPosition;
-   
+        return this._holdingHammer;
     }
     
      CreateSmoke() {
-           if (this._holdingBomb||this._holdingHammer||this._holdingSmoke)
+           if (this._holdingSmoke)
                return;
          this._holdingSmoke = instantiate(this.smokebomb);
           this._holdingSmoke.active = true;
             this._holdingSmoke.parent = this.node;
         this._holdingSmoke.worldPosition = this.smokebomb.worldPosition;
-    }
+    return this._holdingSmoke;
+     }
     start () {
         // [3]
     }
@@ -128,7 +135,7 @@ export class LevelTester extends Component {
         let found=false;
         this.scheduleOnce(()=>{
         for(let i=0;i<this.spiders.length;i++){
-            if(this.spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[i])){
+            if(!this.spiders[i]._sleeping&&this.spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[i])){
                 if(!this.spiders[i]._connectedConnector){
                     this.gameOverScreen.active=true;
                     this.gameOverScreen.setSiblingIndex(this.gameOverScreen.parent.children.length+1);
@@ -156,13 +163,12 @@ export class LevelTester extends Component {
                 
                 break; 
             }
+            } else if (this.spiders[i]._sleeping) {
+                this.spiders[i]._sleeping = false;
+                  this.spiders[i].node.children[0].active = false;
             }
         }
-        if(!found){
-            this.gameWinScreen.active=true;
-            this.gameWinScreen.setSiblingIndex(this.gameWinScreen.parent.children.length+1);
-            return;
-        }
+      
        
             this.TurnComplete();
         },1);
@@ -254,15 +260,34 @@ export class LevelTester extends Component {
             GameElement.node.destroy();
         });
         this.connectors = [];
+          this.treasures.forEach(GameElement => {
+            GameElement.node.destroy();
+        });
+          this.treasures = [];
     }
   
     SelectBlock(block){
         if(!this._playerTurn)
             return;
           if(!block||!block.node)
-            return;
-       
-        if (block._connecterType == 1) {
+              return;
+        if (block._placedItem&&block._placedItem._type == "spider") {
+            if (this._holdingSmoke) {
+                let pos = this.node._uiProps.uiTransformComp.convertToNodeSpaceAR(block.node.worldPosition);
+                this._holdingSmoke.setSiblingIndex(this._holdingSmoke.parent.children.length + 1);
+                tween(this._holdingSmoke).to(0.1, { position: pos, scale: new Vec3(1.5, 1.5, 1.5) }).delay(0.1).
+                    call(() => {
+                        block._placedItem._sleeping = true;
+                        block._placedItem.node.children[0].active = true;
+                        this._holdingSmoke.destroy();
+                        this._holdingSmoke = null;
+                    })
+                    .start();
+              
+                return;
+            }
+        }
+           if (block._connecterType == 1) {
             if (this._holdingBomb&&!block._placedItem) {
                 let pos = this.node._uiProps.uiTransformComp.convertToNodeSpaceAR(block.node.worldPosition);
                 this._holdingBomb.setSiblingIndex(this._holdingBomb.parent.children.length + 1);
@@ -279,10 +304,31 @@ export class LevelTester extends Component {
                 return;
             }
         }
-
+         if (block._connecterType ==5) {
+            if (this._holdingHammer&&!block._placedItem) {
+                let pos = this.node._uiProps.uiTransformComp.convertToNodeSpaceAR(block.node.worldPosition);
+                this._holdingHammer.setSiblingIndex(this._holdingHammer.parent.children.length + 1);
+                tween(this._holdingHammer).to(0.1, { position: pos, scale: new Vec3(1.5, 1.5, 1.5) }).delay(0.1).
+                    call(() => {
+                        block._connecterType = 4;
+                        block.face.spriteFrame = block.frames[block._connecterType-1];
+    
+                        this._holdingHammer.destroy();
+                        this._holdingHammer = null;
+                    })
+                    .start();
+              
+                return;
+            } else {
+                 return;
+            }
+        }
+       
         let found=false;
         for(let i=0;i<this.bettles.length;i++){
-            if(this.bettles[i]._connectedConnector.isANeighbor(block)){
+            if (this.bettles[i]._connectedConnector.isANeighbor(block)) {
+             
+
                 found=true;
                 this.bettles[i].node.parent=block.node;
                 this.bettles[i].node.position=new Vec3(0,0,0);
@@ -301,18 +347,57 @@ export class LevelTester extends Component {
                 }
 
                 if(this.bettles[i]._connectedConnector._holdingCoin){
-                    this.bettles[i]._connectedConnector._holdingCoin.node.active = true;
+                  
                        this.collectedCoins++;
                     this.coinText.string = this.collectedCoins +"/"+ this.coins.length;
                     this.bettles[i]._connectedConnector._holdingCoin.node.active = false;
+                      this.bettles[i]._connectedConnector._holdingCoin=null;
                 }
 
                 if(this.bettles[i]._connectedConnector._holdingCookie){
-                    this.bettles[i]._connectedConnector._holdingCookie.node.active = true;
+                  
                          this.collectedCookies++;
                     this.cookieText.string = this.collectedCookies +"/"+ this.cookies.length;
                     this.bettles[i]._connectedConnector._holdingCookie.node.active = false;
-                     }
+                      this.bettles[i]._connectedConnector._holdingCookie=null;
+                }
+                
+                  if(this.bettles[i]._connectedConnector._holdingTreasure){
+                      let item = null;
+                      let pos = null;
+                      if (Math.random() > 0.7) {
+                            pos=  this.hammer.worldPosition;
+                       item=this.CreateHammer();}
+                      else if (Math.random() > 0.3) {
+                            pos=  this.bomb.worldPosition;
+                       item=this.CreateBomb();}
+                      else {
+                          pos=  this.smokebomb.worldPosition;
+                          item = this.CreateSmoke();}
+                    
+                           
+                               item.active = false;
+                      this.bettles[i]._connectedConnector._holdingTreasure.node.parent = this.bettles[i]._connectedConnector.node.parent;
+                      this.bettles[i]._connectedConnector._holdingTreasure.node.setSiblingIndex(this.bettles[i]._connectedConnector._holdingTreasure.node.parent.children.length);
+                        item.setSiblingIndex(this.bettles[i]._connectedConnector._holdingTreasure.node.parent.children.length);
+                  this.bettles[i]._connectedConnector._holdingTreasure.node.worldPosition = this.bettles[i]._connectedConnector.node.worldPosition;
+                    
+                      tween(this.bettles[i]._connectedConnector._holdingTreasure.node).to(1, { position: new Vec3(0, 0, 0), scale: new Vec3(8, 8, 8) }).delay(0.1).call(() => {
+                           item.active = true;
+                          item.parent = this.bettles[i]._connectedConnector._holdingTreasure.node.parent;
+                          item.worldPosition = this.bettles[i]._connectedConnector._holdingTreasure.node.worldPosition;
+                         
+                          this.bettles[i]._connectedConnector._holdingTreasure.node.getComponent(Sprite).spriteFrame = this.treasureFrame;
+                         
+                      }).delay(1).call(() => {
+                          item.worldPosition = pos;
+                          ;
+                
+                           this.bettles[i]._connectedConnector._holdingTreasure.node.active = false;
+                      
+                          this.bettles[i]._connectedConnector._holdingTreasure = null;
+                      }).start();
+                }
                
                 if( this.bettles[i]._connectedConnector._connecterType==3){
                     this.gameWinScreen.active=true;
@@ -382,6 +467,18 @@ input.click();
         return this._coin.getComponent(GameElement);
           
     }
+
+     createTreasure(event,data=null){
+        this._treasure = instantiate(this.treasure);
+        this._treasure.parent = this.node.parent;
+        this._treasure.getComponent(GameElement).init("treasure", this, this.treasures.length);
+        this.treasures.push(this._treasure.getComponent(GameElement));
+        this._treasure.active = true;
+        if (data)
+            this._treasure.getComponent(GameElement).setData(data);
+        return this._treasure.getComponent(GameElement);
+          
+     }
 readData(con=null){
     if(con)
     this._content=con;
@@ -441,6 +538,17 @@ let content=this._content;
                 this.createPortal(null,element);
             });
         }
+     let treasures = content["treasures"];
+        if (treasures) {
+        this.treasures = [];
+        treasures.forEach(GameElement => {
+            if (GameElement)
+                this.createTreasure(GameElement);
+        });
+        }
+     this.treasures.forEach(GameElement => {
+        GameElement.setUpData();
+    });
     this.spiders.forEach(GameElement => {
         GameElement.setUpData();
     });
@@ -473,6 +581,7 @@ let content=this._content;
     this._coin = null;
     this._cookie = null;
     this._portal = null;
+     this._treasure = null;
     this.collectedCoins=0;
     this.collectedCookies=0;
     this.coinText.string=this.collectedCoins+"/"+this.coins.length;
