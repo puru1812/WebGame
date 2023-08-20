@@ -442,11 +442,15 @@ export class LevelCreator extends Component {
        
         return this._button.getComponent(Element);
     }
-    createSpider(event,data=null){
+    createSpider(event,customEventData: string=null,data=null){
       
+       
         this._spider = instantiate(this.spider);
         this._spider.parent = this.node.parent;
         this._spider.getComponent(Element).init("spider", this,this.spiders.length);
+         if (customEventData&&customEventData == "trapped") {
+            this._spider.getComponent(Element).setTrapped(true);
+        }
         this._spider.active = true;
               this.spiders.push(this._spider.getComponent(Element));
         if (data)
@@ -455,12 +459,15 @@ export class LevelCreator extends Component {
         return this._spider.getComponent(Element);
     }
 
-    createBettle(event,data=null){
+    createBettle(event,customEventData: string=null,data=null){
         
         this._bettle = instantiate(this.bettle);
         this._bettle.parent = this.node.parent;
         this._bettle.getComponent(Element).init("bettle", this, this.bettles.length);
           this.bettles.push(this._bettle.getComponent(Element));
+        if (customEventData&&customEventData == "trapped") {
+            this._bettle.getComponent(Element).setTrapped(true);
+        }
         this._bettle.active = true;
          if (data)
             this._bettle.getComponent(Element).setData(data);
@@ -662,7 +669,7 @@ for(let i=0;i<connectors.length;i++){
        this.spiders = [];
        spiders.forEach(element => {
            if (element)
-               this.createSpider(null,element);
+               this.createSpider(null,null,element);
            });
            let buttons = content["buttons"];
            if(buttons)
@@ -705,7 +712,7 @@ for(let i=0;i<connectors.length;i++){
        this.bettles = [];
        bettles.forEach(element => {
            if (element)
-               this.createBettle(null,element);
+               this.createBettle(null,null,element);
        });
        for(let i=0;i<this.connectors.length;i++){
         this.connectors[i].setUpData();

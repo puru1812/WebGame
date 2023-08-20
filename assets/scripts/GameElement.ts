@@ -21,7 +21,7 @@ export class GameElement extends Component {
     _type = "";
     _game = null;
     connectors = [];
-    _placedItem = null;
+    _placedItems = [];
     _connectedConnector = null;
     _buttonConnector = null;
     _holdingButton=null;
@@ -33,10 +33,13 @@ export class GameElement extends Component {
     index = -1;
     _data = null;
     _connecterType = -1;
-    _hidden=false;
+    _hidden = false;
+    _trapped = false;
     neighbors = [null, null, null, null];
     _sleeping = false;
     // [2]
+        @property({type:Node})
+     cover:Node = null;
      @property({type:Sprite})
      face:Sprite = null;
     @property({type:SpriteFrame})
@@ -57,10 +60,14 @@ export class GameElement extends Component {
     }
  
     setData(data) {
+        this._placedItems = [];
         this.index = data["id"];
         this.node.position = data["position"];
         this._type = data["type"];
-       this.setHidden(data["hidden"]);
+          if(data["hidden"])
+        this.setHidden(data["hidden"]);
+         if(data["trapped"])
+          this.setTrapped(data["trapped"]);
         this._data = data;
        
        
@@ -110,14 +117,50 @@ export class GameElement extends Component {
         }
         return false;
     }
-    hasAValidNeighbor(bettle){
+
+     hasPlacedItem(type=null) {
+         for (let i = 0; i < this._placedItems.length; i++){
+             if (this._placedItems[i]._type == type) {
+                 return this._placedItems[i];
+             }
+         }
+         return null;
+     }
+    hasUnTrappedPlacedItem(type) {
+        for (let i = 0; i < this._placedItems.length; i++){
+             if (this._placedItems[i]._type == type&&!this._placedItems[i]._trapped) {
+                 return this._placedItems[i];
+             }
+         }
+         return null;
+    }
+    removePlacedItem(item) {
+        let index = this._placedItems.indexOf(item);
+        this._placedItems.splice(index, 1);
+    }
+        addPlacedItem(item) {
+        if(this._placedItems.indexOf(item)<0)
+        this._placedItems.push(item);
+    }
+    
+    hasTrappedPlacedItem(type=null) {
+        for (let i = 0; i < this._placedItems.length; i++){
+             if (this._placedItems[i]._type == type&&this._placedItems[i]._trapped) {
+                 return this._placedItems[i];
+             }
+         }
+         return null;
+    }
+    
+    hasAValidNeighbor(bettle,direction=0){
         if(!this.neighbors)
             return null;
      
         //left,top,bottom,right
         for(let i=0;i<this.neighbors.length;i++){
-            if(this.neighbors[i]!=null&&this.neighbors[i]._placedItem&&this.neighbors[i]._placedItem._type=="bettle"&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
+            if(this.neighbors[i]!=null&&this.neighbors[i].hasPlacedItem("bettle")&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
                 console.log("found bettle");
+                if(!this.neighbors[i].hasPlacedItem("bettle")._trapped)
                 return this.neighbors[i];
             }
         }
@@ -141,7 +184,7 @@ export class GameElement extends Component {
                 let blocks=[];
                 console.log("portal direction found is"+this._portal._connectedPortal._connectedConnector.isConnectedTo(0,bettle._connectedConnector,[]));
                   
-                if(this._portal._connectedPortal._connectedConnector&&(this._portal._connectedPortal._connectedConnector.isConnectedTo(0,bettle._connectedConnector,blocks)==true)){
+                if(this._portal._connectedPortal._connectedConnector&&(this._portal._connectedPortal._connectedConnector.isConnectedTo(direction,bettle._connectedConnector,blocks)==true)){
                    
                      let count=blocks.length;
                     if(count<minCount)
@@ -206,22 +249,25 @@ export class GameElement extends Component {
         this._game.SelectBlock(this);
     }
     
+
     setUpData() {
         if (this._data) {
             if (this._data["placedItem"]) {
-              
+                let found = false;
                 for (let i = 0; i < this._game.spiders.length; i++) {
                     if (this._game.spiders[i]._type == this._data["placedItem"]["type"] && (this._game.spiders[i].index == this._data["placedItem"]["id"])){
-                        this._placedItem =this._data["placedItem"];
+                        this._placedItems.push(this._game.spiders[i]);
                         this._game.spiders[i].node.parent = this.node;
                         this._game.spiders[i].node.worldPosition = this.node.worldPosition;
+                        found = true;
                         break;
                     }
                 }
-                if (!this._placedItem) {
+                if (!found) {
                      for (let i = 0; i < this._game.bettles.length; i++) {
                     if (this._game.bettles[i]._type == this._data["placedItem"]["type"] && (this._game.bettles[i].index == this._data["placedItem"]["id"])){
-                        this._placedItem =this._data["placedItem"];
+                        
+                        this._placedItems.push(this._game.bettles[i]);
                         this._game.bettles[i].node.parent = this.node;
                         this._game.bettles[i].node.worldPosition = this.node.worldPosition;
                  
@@ -329,6 +375,15 @@ export class GameElement extends Component {
     
     start () {
         // [3]
+    }
+
+    setTrapped(trapped=false) {
+        this._trapped = trapped;
+        if (this._trapped) {
+            this.cover.active = true;
+        } else {
+             this.cover.active = false;
+        }
     }
   
     setHidden(hide) {

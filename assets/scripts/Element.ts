@@ -39,7 +39,9 @@ export class Element extends Component {
     @property({type:Label})
     text:Label = null;
      @property({type:Sprite})
-     face:Sprite = null;
+     face: Sprite = null;
+       @property({type:Node})
+     cover:Node = null;
     @property({type:SpriteFrame})
      frames:SpriteFrame[] = [];
     init(type, creator, id,customEventData=null) {
@@ -61,10 +63,19 @@ export class Element extends Component {
         this.node.position = data["position"];
         this._type = data["type"];
         if(data["hidden"])
-        this.setHidden(data["hidden"]);
-        this._data = data;
-       
-       
+            this.setHidden(data["hidden"]);
+         if(data["trapped"])
+             this.setTrapped(data["trapped"]);
+        this._data = data; 
+    }
+
+    setTrapped(trapped=false) {
+        this._trapped = trapped;
+        if (this._trapped) {
+            this.cover.active = true;
+        } else {
+             this.cover.active = false;
+        }
     }
     setUpData() {
         if (this._data) {
@@ -230,6 +241,7 @@ export class Element extends Component {
             data["connectedPortal"] = this._connectedPortal.index;
         }
         data["hidden"] = this._hidden;
+        data["trapped"] = this._trapped;
         data["type"] = this._type;
         data["position"] = this.node.position;
         if(this._connecterType>=0)
