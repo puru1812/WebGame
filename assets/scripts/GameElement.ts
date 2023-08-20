@@ -119,6 +119,8 @@ export class GameElement extends Component {
     }
 
      hasPlacedItem(type=null) {
+         if (!this.node || !this._placedItems)
+             return null;
          for (let i = 0; i < this._placedItems.length; i++){
              if (this._placedItems[i]._type == type) {
                  return this._placedItems[i];
@@ -127,6 +129,8 @@ export class GameElement extends Component {
          return null;
      }
     hasUnTrappedPlacedItem(type) {
+         if (!this.node || !this._placedItems)
+             return null;
         for (let i = 0; i < this._placedItems.length; i++){
              if (this._placedItems[i]._type == type&&!this._placedItems[i]._trapped) {
                  return this._placedItems[i];
@@ -135,15 +139,21 @@ export class GameElement extends Component {
          return null;
     }
     removePlacedItem(item) {
+         if (!this.node || !this._placedItems)
+             return null;
         let index = this._placedItems.indexOf(item);
         this._placedItems.splice(index, 1);
     }
-        addPlacedItem(item) {
+    addPlacedItem(item) {
+             if (!this.node || !this._placedItems)
+             return null;
         if(this._placedItems.indexOf(item)<0)
         this._placedItems.push(item);
     }
     
-    hasTrappedPlacedItem(type=null) {
+    hasTrappedPlacedItem(type = null) {
+         if (!this.node || !this._placedItems)
+             return null;
         for (let i = 0; i < this._placedItems.length; i++){
              if (this._placedItems[i]._type == type&&this._placedItems[i]._trapped) {
                  return this._placedItems[i];
