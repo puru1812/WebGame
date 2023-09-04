@@ -1,5 +1,5 @@
 
-import { _decorator, Color, Component, Node, Sprite, SpriteFrame } from 'cc';
+import { _decorator, Color, Component, Label, Node, Sprite, SpriteFrame } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
@@ -43,7 +43,9 @@ export class GameElement extends Component {
      @property({type:Sprite})
      face:Sprite = null;
     @property({type:SpriteFrame})
-     frames:SpriteFrame[] = [];
+    frames: SpriteFrame[] = [];
+     @property({type:Label})
+     label:Label = null;
     init(type, creator, id,customEventData=null) {
         
         this._type = type;
@@ -57,6 +59,8 @@ export class GameElement extends Component {
               
         this._game = creator;
         this.index = id;
+        if (this.label)
+            this.label.string = "" + id;
     }
  
     setData(data) {
@@ -83,20 +87,24 @@ export class GameElement extends Component {
                 if(this.node.worldPosition.x==this._game.connectors[i].node.worldPosition.x){
                     if(this.node.worldPosition.y<this._game.connectors[i].node.worldPosition.y){
                         //top
-                        this.neighbors[1]=this._game.connectors[i];
+                        this.neighbors[1] = this._game.connectors[i];
+                        console.log(this.index + "top neighbor"+ this._game.connectors[i].index);
                  
                     }else{
                         //bottom
-                        this.neighbors[3]=this._game.connectors[i];
+                        this.neighbors[3] = this._game.connectors[i];
+                         console.log(this.index + "bottom neighbor"+ this._game.connectors[i].index);
                  
                     }
                 }else  if(this.node.worldPosition.y==this._game.connectors[i].node.worldPosition.y){
                     if(this.node.worldPosition.x>this._game.connectors[i].node.worldPosition.x){
                         //left
-                        this.neighbors[0]=this._game.connectors[i];
+                        this.neighbors[0] = this._game.connectors[i];
+                         console.log(this.index + "left neighbor"+ this._game.connectors[i].index);
                     }else{
                         //right
-                        this.neighbors[2]=this._game.connectors[i];
+                        this.neighbors[2] = this._game.connectors[i];
+                         console.log(this.index + "right neighbor"+ this._game.connectors[i].index);
                  
                     }
              
@@ -108,6 +116,11 @@ export class GameElement extends Component {
     isANeighbor(block){
         for(let i=0;i<this.neighbors.length;i++){
             if(this.neighbors[i]!=null&&this.neighbors[i]==block){
+                return true;
+            }
+        }
+          for(let i=0;i<block.neighbors.length;i++){
+            if(block.neighbors[i]!=null&&block.neighbors[i]==this){
                 return true;
             }
         }
@@ -270,6 +283,8 @@ export class GameElement extends Component {
                         this._game.spiders[i].node.parent = this.node;
                         this._game.spiders[i].node.worldPosition = this.node.worldPosition;
                         found = true;
+                          console.log(this._data["placedItem"]["type"] + "connectedConnector" +"in game"+this.index);
+             
                         break;
                     }
                 }
@@ -354,12 +369,15 @@ export class GameElement extends Component {
                     }
                 }
             }
-                for (let i = 0; i < this._game.connectors.length; i++) {
-                    if (this._data["connectedConnector"]!=null&&this._game.connectors[i].index == this._data["connectedConnector"]) {
-                        this._connectedConnector = this._game.connectors[i];
+            for (let i = 0; i < this._game.connectors.length; i++) {
+                      if (this._data["connectedConnector"]!=null&&this._game.connectors[i].index == this._data["connectedConnector"]) {
+                          this._connectedConnector = this._game.connectors[i];
+                          this.node.worldPosition = this._game.connectors[i].node.worldPosition;
+                         
                     }
                     if (this._data["buttonConnector"]!=null&&this._game.connectors[i].index == this._data["buttonConnector"]) {
                         this._buttonConnector = this._game.connectors[i];
+                          this.node.worldPosition = this._game.connectors[i].node.worldPosition;
                     }
                 }
             

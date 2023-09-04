@@ -240,11 +240,12 @@ export class LevelTester extends Component {
 
         this._connector = instantiate(this.connector);
         this._connector.parent = this.node.parent;
-        this._connector.getComponent(GameElement).init("connector", this, this.connectors.length, type);
+        this._connector.getComponent(GameElement).init("connector", this, data.id, type);
         this.connectors.push(this._connector.getComponent(GameElement));
         this._connector.active = true;
         if (data)
             this._connector.getComponent(GameElement).setData(data);
+         this._connector.getComponent(GameElement).initializeNeighbours();
         return this._connector.getComponent(GameElement);
 
     }
@@ -293,6 +294,7 @@ export class LevelTester extends Component {
 
 
     SelectBlock(block) {
+        block.initializeNeighbours();
         if (!this._playerTurn)
             return;
         if (!block || !block.node)
@@ -525,6 +527,30 @@ export class LevelTester extends Component {
         return this._treasure.getComponent(GameElement);
 
     }
+        clear() {
+            this.spiders = [];;
+              this.bettles = [];;
+            this.connectors = [];
+             this._spider = null;
+        this._bettle = null;
+        this._connector = null;
+        this._button = null;
+        this._coin = null;
+        this._cookie = null;
+        this._portal = null;
+        this._treasure = null;
+        this.collectedCoins = 0;
+        this.collectedCookies = 0;
+        this.coinText.string = this.collectedCoins + "/" + this.coins.length;
+        this.cookieText.string = this.collectedCookies + "/" + this.coins.length;
+        this.skipbutton.active = true;
+            this._playerTurnBettles = [];
+            this.treasures = [];
+            this.portals = [];
+              this.coins = [];
+            
+        
+    }
     readData(con = null) {
         if (con)
             this._content = con;
@@ -614,9 +640,11 @@ export class LevelTester extends Component {
         this.cookies.forEach(GameElement => {
             GameElement.setUpData();
         });
-        this.connectors.forEach(GameElement => {
-            GameElement.initializeNeighbours();
-        });
+        for (let i = 0; i < this.connectors.length; i++){
+            this.connectors[i].initializeNeighbours();
+        }
+     
+       
         // this._movingconnector = null;
         this._spider = null;
         this._bettle = null;

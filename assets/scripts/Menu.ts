@@ -32,7 +32,7 @@ export class Menu extends Component {
     start () {
         // [3]
     }
-    public  GoToMenu(){
+    public GoToMenu() {
         this.menu.active=true;
         this.leveleditor.active=false;
         this.leveltester.active=false;

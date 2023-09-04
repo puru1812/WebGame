@@ -71,7 +71,11 @@ export class LevelCreator extends Component {
     _selectedChild = null;
     _previousPortal=null;
     _portalCount=0;
-    commands=[];
+    commands = [];
+    protected onDisable(): void {
+        this.resetLevel();
+        this.clear();
+    }
     onTextChanged(x,label:EditBox) {
         this._levelNumber = parseInt(label.textLabel.string);
     }
@@ -106,7 +110,8 @@ export class LevelCreator extends Component {
                     this.spiders[i]._connectedConnector=null;
                 }
                 this.spiders[i].node.destroy();
-                this.spiders.splice(i,1);
+                this.spiders.splice(i, 1);
+                 break;
             }
         }
     }
@@ -118,7 +123,8 @@ export class LevelCreator extends Component {
                     this.portals[i]._connectedConnector=null;
                 }
                 this.portals[i].node.destroy();
-                this.portals.splice(i,1);
+                this.portals.splice(i, 1);
+                 break;
             }
         }
     }
@@ -131,7 +137,8 @@ export class LevelCreator extends Component {
                     this.treasures[i]._connectedConnector=null;
                 }
                 this.treasures[i].node.destroy();
-                this.treasures.splice(i,1);
+                this.treasures.splice(i, 1);
+                 break;
             }
         }
     }
@@ -144,7 +151,8 @@ export class LevelCreator extends Component {
                     this.bettles[i]._connectedConnector=null;
                 }
                 this.bettles[i].node.destroy();
-                this.bettles.splice(i,1);
+                this.bettles.splice(i, 1);
+                 break;
             }
         }
     }
@@ -154,13 +162,12 @@ export class LevelCreator extends Component {
             if(this.buttons[i].index==index){
                 if(this.buttons[i]._connectedConnector){
                     this.buttons[i]._connectedConnector._holdingButton=null;
-                    this.removeConnector(this.buttons[i]._buttonConnector);
                     this.buttons[i]._buttonConnector=null;
-                    this.buttons[i]._connectedConnector=null;
                     
                 }
                 this.buttons[i].node.destroy();
-                this.buttons.splice(i,1);
+                this.buttons.splice(i, 1);
+                 break;
             }
         }
     }
@@ -174,7 +181,8 @@ export class LevelCreator extends Component {
                     
                 }
                 this.coins[i].node.destroy();
-                this.coins.splice(i,1);
+                this.coins.splice(i, 1);
+                break;
             }
         }
     }
@@ -193,33 +201,37 @@ export class LevelCreator extends Component {
         }
     }
     removeConnector(index){
-        for(let i=0;i<this.connectors.length;i++){
-            if(this.connectors[i].index==index){
-                if(this.connectors[i]._placedItem){
-                    if(this.connectors[i]._placedItem.type=="spider"){
+        for (let i = 0; i < this.connectors.length; i++) {
+            if (this.connectors[i].index == index) {
+                if ( this.connectors[i]._placedItem) {
+                    if (this.connectors[i]._placedItem._type == "spider") {
                         this.removeSpider(this.connectors[i]._placedItem.index);
-                    }else{
+                   
+                    } else {
                         this.removeBettle(this.connectors[i]._placedItem.index);
+                              
                     }
-                    this.connectors[i]._placedItem=null;
+                    
+                    this.connectors[i]._placedItem = null;
                 }
-                if(this.connectors[i]._holdingButton){
+                
+                if (this.connectors[i]._holdingButton) {
                     this.removeButton(this.connectors[i]._holdingButton);
                 }
-                if(this.connectors[i]._portal){
+                if (this.connectors[i]._portal) {
                     this.removePortal(this.connectors[i]._portal);
                 }
-                if(this.connectors[i]._holdingCoin){
+                if (this.connectors[i]._holdingCoin) {
                     this.removeCoin(this.connectors[i]._holdingCoin);
                 }
-                if(this.connectors[i]._holdingCookie){
+                if (this.connectors[i]._holdingCookie) {
                     this.removeCookie(this.connectors[i]._holdingCookie);
                 }
-                  if(this.connectors[i]._holdingTreasure){
+                if (this.connectors[i]._holdingTreasure) {
                     this.removeTreasure(this.connectors[i]._holdingTreasure);
                 }
                 this.connectors[i].node.destroy();
-                this.connectors.splice(i,1);
+                this.connectors.splice(i, 1);
             }
         }
     }
@@ -643,14 +655,23 @@ export class LevelCreator extends Component {
        this.resetLevel();
         let connectors = content["connectors"];
        this.connectors = [];
-
+;   this._movingconnector = null;
+       this._spider = null;
+       this._bettle = null;
+       this._button = null;
+       this._portal = null;
+       this._coin = null;
+       this._cookie = null;
+        this._treasure = null;
+       this._connector = null;
 let self=this;
 for(let i=0;i<connectors.length;i++){
     let element=connectors[i];
                if(element){
                let connector=self.createConnector(element.type,element);
                connector.node.on(Node.EventType.TOUCH_START, () => {
-                if (!self._spider && !self._bettle&&!self._button&&!self._portal&&!self._cookie&&!self._coin&&!self.treasure)
+                   console.log("touch connector"+self._spider +self._bettle +self._button +self._portal +self._cookie +self._coin + self._treasure);
+                   if (!self._spider && !self._bettle && !self._button && !self._portal && !self._cookie && !self._coin && !self._treasure)
                 {    
                 
                     self._connector =  connector.node;
@@ -760,7 +781,6 @@ for(let i=0;i<connectors.length;i++){
      this._movingconnector = null;
        this._spider = null;
        this._bettle = null;
-       this._connector = null;
        this._button = null;
        this._portal = null;
        this._coin = null;
@@ -772,6 +792,31 @@ for(let i=0;i<connectors.length;i++){
 }
 input.click();
 
+    }
+    clear() {
+           this._movingconnector = null;
+       this._spider = null;
+       this._bettle = null;
+       this._button = null;
+       this._portal = null;
+       this._coin = null;
+       this._cookie = null;
+        this._treasure = null;
+        this._connector = null;
+          this.treasures = [];
+     this.buttons = [];
+     this.portals = [];
+     this.connectors = [];
+     this.spiders = [];
+     this.coins = [];
+     this.cookies = [];
+     this.bettles = [];
+     this._levelNumber = 0;
+     this._selectedChild = null;
+     this._previousPortal=null;
+     this._portalCount=0;
+     this.commands = [];
+        
     }
      readTextFile(file)
 {
