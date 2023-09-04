@@ -74,7 +74,6 @@ export class LevelCreator extends Component {
     commands = [];
     protected onDisable(): void {
         this.resetLevel();
-        this.clear();
     }
     onTextChanged(x,label:EditBox) {
         this._levelNumber = parseInt(label.textLabel.string);
@@ -866,6 +865,7 @@ input.click();
         });
         this.coins = [];
         this.graphics.clear();
+        this.clear();
     }
 
 

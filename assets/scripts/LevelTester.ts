@@ -185,6 +185,7 @@ export class LevelTester extends Component {
                         spiders[i].node.parent = chosenNeighbor.node;
                         spiders[i].node.position = new Vec3(0, 0, 0);
                         found = true;
+                        if(bettles.length>k+1)
                         k++;
 
                     }
