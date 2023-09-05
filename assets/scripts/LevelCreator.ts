@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node,Vec3,Vec2,Graphics,instantiate,UITransform, Sprite, Color, EditBox, SpriteFrame } from 'cc';
+import { _decorator, Component, Node,Vec3,Vec2,AsyncDelegate,Graphics,instantiate,UITransform, Sprite, Color, EditBox, SpriteFrame } from 'cc';
 import { Element } from './Element';
 const { ccclass, property } = _decorator;
 
@@ -627,13 +627,35 @@ export class LevelCreator extends Component {
         "cookies": cookies,
         "treasures":treasures
          }
-        console.log("level" + JSON.stringify(level));
-        var a = document.createElement("a");
-        a.href = window.URL.createObjectURL(new Blob([JSON.stringify(level)], {type: "text/plain"}));
-        a.download = "level"+this._levelNumber+".json";
-        a.click();
+       
+        this.loadFolder("level" + this._levelNumber + ".json",JSON.stringify(level));
         
+   
     }
+    async loadFolder(name,value) {
+           
+ const opts = {
+    types: [
+      {
+        suggestedName: name,
+        accept: { "text/plain": [".json"] },
+      },
+    ],
+ };
+ 
+
+    const handle = await window.showSaveFilePicker(opts);
+    const writable = await handle.createWritable();
+ 
+    await writable.write(value);
+    await writable.close();
+ 
+        return handle;
+       
+
+          
+    }
+    
 
     loadFile() {
         var input = document.createElement('input');
