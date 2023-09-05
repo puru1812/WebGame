@@ -82,7 +82,7 @@ export class Element extends Component {
             if (this._data["placedItem"]) {
               
                 for (let i = 0; i < this._creator.spiders.length; i++) {
-                    if (this._creator.spiders[i]._type == this._data["placedItem"]["type"] && (this._creator.spiders[i].index == this._data["placedItem"]["id"])){
+                    if (this._creator.spiders[i]&&this._creator.spiders[i]._type == this._data["placedItem"]["type"] && (this._creator.spiders[i].index == this._data["placedItem"]["id"])){
                         this._placedItem =this._creator.spiders[i];
                         this._creator.spiders[i].node.parent = this.node;
                         this._creator.spiders[i].node.worldPosition = this.node.worldPosition;
@@ -91,7 +91,7 @@ export class Element extends Component {
                 }
                 if (!this._placedItem) {
                      for (let i = 0; i < this._creator.bettles.length; i++) {
-                    if (this._creator.bettles[i]._type == this._data["placedItem"]["type"] && (this._creator.bettles[i].index == this._data["placedItem"]["id"])){
+                    if (this._creator.bettles[i]&&this._creator.bettles[i]._type == this._data["placedItem"]["type"] && (this._creator.bettles[i].index == this._data["placedItem"]["id"])){
                         this._placedItem = this._creator.bettles[i];
                         this._creator.bettles[i].node.parent = this.node;
                         this._creator.bettles[i].node.worldPosition = this.node.worldPosition;
@@ -103,7 +103,7 @@ export class Element extends Component {
             }
             if (this._data["holdingButton"]) {
                 for (let i = 0; i < this._creator.buttons.length; i++) {
-                    if (this._creator.buttons[i]._type == this._data["holdingButton"]["type"] && (this._creator.buttons[i].index == this._data["holdingButton"]["id"])){
+                    if (this._creator.buttons[i]&&this._creator.buttons[i]._type == this._data["holdingButton"]["type"] && (this._creator.buttons[i].index == this._data["holdingButton"]["id"])){
                         this._holdingButton = this._creator.buttons[i];
                         this.text.string= ""+this._creator.buttons[i].index;
                         this._creator.buttons[i].node.parent = this.node;
@@ -115,7 +115,7 @@ export class Element extends Component {
             }
             if (this._data["holdingCoin"]) {
                 for (let i = 0; i < this._creator.coins.length; i++) {
-                    if (this._creator.coins[i]._type == this._data["holdingCoin"]["type"] && (this._creator.coins[i].index == this._data["holdingCoin"]["id"])){
+                    if (this._creator.coins[i]&&this._creator.coins[i]._type == this._data["holdingCoin"]["type"] && (this._creator.coins[i].index == this._data["holdingCoin"]["id"])){
                         this._holdingCoin = this._creator.coins[i];
                         this._creator.coins[i].node.parent = this.node;
                         this._creator.coins[i].node.worldPosition = this.node.worldPosition;
@@ -126,7 +126,7 @@ export class Element extends Component {
             }
             if (this._data["holdingCookie"]) {
                 for (let i = 0; i < this._creator.cookies.length; i++) {
-                    if (this._creator.cookies[i]._type == this._data["holdingCookie"]["type"] && (this._creator.cookies[i].index == this._data["holdingCookie"]["id"])){
+                    if (this._creator.cookies[i]&&this._creator.cookies[i]._type == this._data["holdingCookie"]["type"] && (this._creator.cookies[i].index == this._data["holdingCookie"]["id"])){
                         this._holdingCookie = this._creator.cookies[i];
                         this._creator.cookies[i].node.parent = this.node;
                         this._creator.cookies[i].node.worldPosition = this.node.worldPosition;
@@ -138,7 +138,7 @@ export class Element extends Component {
 
              if (this._data["holdingTreasure"]) {
                 for (let i = 0; i < this._creator.treasures.length; i++) {
-                    if (this._creator.treasures[i]._type == this._data["holdingTreasure"]["type"] && (this._creator.treasures[i].index == this._data["holdingTreasure"]["id"])){
+                    if (this._creator.treasures[i]&&this._creator.treasures[i]._type == this._data["holdingTreasure"]["type"] && (this._creator.treasures[i].index == this._data["holdingTreasure"]["id"])){
                         this._holdingTreasure = this._creator.treasures[i];
                         this._creator.treasures[i].node.parent = this.node;
                         this._creator.treasures[i].node.worldPosition = this.node.worldPosition;
@@ -150,7 +150,7 @@ export class Element extends Component {
             if (this._data["portal"]) {
               
                 for (let i = 0; i < this._creator.portals.length; i++) {
-                    if (this._creator.portals[i]._type == this._data["portal"]["type"] && (this._creator.portals[i].index == this._data["portal"]["id"])){
+                    if (this._creator.portals[i]&&this._creator.portals[i]._type == this._data["portal"]["type"] && (this._creator.portals[i].index == this._data["portal"]["id"])){
                         this._portal = this._creator.portals[i];
                        
                         this._creator.portals[i].node.parent = this.node;
@@ -166,7 +166,7 @@ export class Element extends Component {
             {  for (let i = 0; i < this._creator.connectors.length; i++) {
                   for (let j = 0; j <connectors.length; j++) {
            
-                      if (connectors[j]["index"]==(this._creator.connectors[i].index))
+                      if (connectors[j]&&connectors[j]["index"]==(this._creator.connectors[i].index))
                           this.connectors.push({ "connector":this._creator.connectors[i],"wireType":connectors[j]["wireType"] });
                   }
             }
@@ -175,7 +175,7 @@ export class Element extends Component {
             if (this._data["connectedPortal"]) {
                
                 for (let i = 0; i < this._creator.portals.length; i++) {
-                    if ( this._creator.portals[i].index == this._data["connectedPortal"]){
+                    if (this._creator.portals[i]&& this._creator.portals[i].index == this._data["connectedPortal"]){
                         this._connectedPortal = this._creator.portals[i];
                         this._creator.portals[i]._connectedPortal=this;;
                         
@@ -224,15 +224,18 @@ export class Element extends Component {
           if (this._portal) {
             data["portal"] = { "type": this._portal._type, "id": this._portal.index};
           }
-        if (this.connectors.length > 0) {
+        if (this.connectors&&this.connectors.length > 0) {
             let connectors = [];
             for (let i = 0; i < this.connectors.length; i++)
+                if(this.connectors[i])
                 connectors.push({ "index":this.connectors[i]["connector"].index, "wireType":  this.connectors[i]["wireType"] });
             
             data["connectors"] = connectors;
         }
         if (this._connectedConnector) {
             data["connectedConnector"] = this._connectedConnector.index;
+               console.log("save item on connector" + this._connectedConnector.index);
+          
         }
         if (this._buttonConnector) {
             data["buttonConnector"] = this._buttonConnector.index;

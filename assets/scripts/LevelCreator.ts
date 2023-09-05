@@ -113,95 +113,118 @@ export class LevelCreator extends Component {
                  break;
             }
         }
+        for (let i = 0; i < this.spiders.length; i++) {
+            this.spiders[i].index = i;
+        }
     }
     removePortal(index){
         for(let i=0;i<this.portals.length;i++){
-            if(this.portals[i].index==index){
+            if(this.portals[i]&&this.portals[i].index==index){
                 if(this.portals[i]._connectedConnector){
                     this.portals[i]._connectedConnector._portal=null;
                     this.portals[i]._connectedConnector=null;
                 }
                 this.portals[i].node.destroy();
-                this.portals.splice(i, 1);
+              
+              this.portals.splice(i, 1);
                  break;
             }
+        }
+        for (let i = 0; i < this.portals.length; i++) {
+            this.spiders[i].index = i;
         }
     }
 
     removeTreasure(index){
         for(let i=0;i<this.treasures.length;i++){
-            if(this.treasures[i].index==index){
+            if(this.treasures[i]&&this.treasures[i].index==index){
                 if(this.treasures[i]._connectedConnector){
                     this.treasures[i]._connectedConnector._portal=null;
                     this.treasures[i]._connectedConnector=null;
                 }
                 this.treasures[i].node.destroy();
-                this.treasures.splice(i, 1);
+               this.treasures.splice(i, 1);
                  break;
             }
+        }
+        for (let i = 0; i < this.treasures.length; i++) {
+            this.treasures[i].index = i;
         }
     }
     removeBettle(index){
         for(let i=0;i<this.bettles.length;i++){
 
-            if(this.bettles[i].index==index){
+            if(this.bettles[i]&&this.bettles[i].index==index){
                 if(this.bettles[i]._connectedConnector){
                     this.bettles[i]._connectedConnector._placedItem=null;
                     this.bettles[i]._connectedConnector=null;
                 }
                 this.bettles[i].node.destroy();
-                this.bettles.splice(i, 1);
+               this.bettles.splice(i, 1);
                  break;
             }
+        }
+        for (let i = 0; i < this.bettles.length; i++) {
+            this.bettles[i].index = i;
         }
     }
     removeButton(index){
         for(let i=0;i<this.buttons.length;i++){
 
-            if(this.buttons[i].index==index){
+            if(this.buttons[i]&&this.buttons[i].index==index){
                 if(this.buttons[i]._connectedConnector){
                     this.buttons[i]._connectedConnector._holdingButton=null;
                     this.buttons[i]._buttonConnector=null;
                     
                 }
                 this.buttons[i].node.destroy();
-                this.buttons.splice(i, 1);
+                 this.buttons.splice(i, 1);
                  break;
             }
+        }
+        for (let i = 0; i < this.buttons.length; i++) {
+            this.buttons[i].index = i;
         }
     }
     removeCoin(index){
         for(let i=0;i<this.coins.length;i++){
 
-            if(this.coins[i].index==index){
+            if(this.coins[i]&&this.coins[i].index==index){
                 if(this.coins[i]._connectedConnector){
                     this.coins[i]._connectedConnector._holdingCoin=null;
                     this.coins[i]._connectedConnector=null;
                     
                 }
                 this.coins[i].node.destroy();
-                this.coins.splice(i, 1);
-                break;
+              this.coins.splice(i, 1);
+                 break;
             }
+        }
+        for (let i = 0; i < this.coins.length; i++) {
+            this.coins[i].index = i;
         }
     }
     removeCookie(index){
         for(let i=0;i<this.cookies.length;i++){
 
-            if(this.cookies[i].index==index){
+            if(this.cookies[i]&&this.cookies[i].index==index){
                 if(this.cookies[i]._connectedConnector){
                     this.cookies[i]._connectedConnector._holdingCookie=null;
                     this.cookies[i]._connectedConnector=null;
                     
                 }
                 this.cookies[i].node.destroy();
-                this.cookies.splice(i,1);
+            this.cookies.splice(i, 1);
+                 break;
             }
+        }
+        for (let i = 0; i < this.cookies.length; i++) {
+            this.cookies[i].index = i;
         }
     }
     removeConnector(index){
         for (let i = 0; i < this.connectors.length; i++) {
-            if (this.connectors[i].index == index) {
+            if (this.connectors[i]&&this.connectors[i].index == index) {
                 if ( this.connectors[i]._placedItem) {
                     if (this.connectors[i]._placedItem._type == "spider") {
                         this.removeSpider(this.connectors[i]._placedItem.index);
@@ -230,9 +253,14 @@ export class LevelCreator extends Component {
                     this.removeTreasure(this.connectors[i]._holdingTreasure);
                 }
                 this.connectors[i].node.destroy();
-                this.connectors.splice(i, 1);
+               this.connectors.splice(i, 1);
+                 break;
             }
         }
+        for (let i = 0; i < this.connectors.length; i++) {
+            this.connectors[i].index = i;
+        }
+         console.log("trash connectors count" + this.connectors.length);
     }
 
     addMove(command){
@@ -248,6 +276,7 @@ export class LevelCreator extends Component {
                 child.on(Node.EventType.TOUCH_START, (event) => {
                     this._selectedChild = child;
                     this.dropElement(event);
+                    
                  }, this);
    
         });
@@ -263,7 +292,6 @@ export class LevelCreator extends Component {
             if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._connector.worldPosition.x,this._connector.worldPosition.y)))
             {
                 this.removeConnector(this._connector.getComponent(Element).index);
-           
                 this._connector=null;
             }
            // this.connectAll();
@@ -285,7 +313,6 @@ export class LevelCreator extends Component {
             this._button.worldPosition = new Vec3(event.getUILocationX(),event.getUILocationY(),0);
             if(this.trash._uiProps.uiTransformComp.isHit(new Vec2(this._button.worldPosition.x,this._button.worldPosition.y)))
             {
-                
                     this.removeButton(this._button.getComponent(Element).index);
                 this._button=null;
             }
@@ -326,24 +353,27 @@ export class LevelCreator extends Component {
             let element = this._connector;
             this._connector.worldPosition = this._selectedChild.worldPosition;;
             this._connector.on(Node.EventType.TOUCH_START, () => {
-                if (!this._spider && !this._bettle&&!this._button&&!this._portal&&!this._coin&&!this._cookie&&!this._treasure)
-                {    this._connector = element;
-                    
+                if (!this._spider && !this._bettle && !this._button && !this._portal && !this._coin && !this._cookie && !this._treasure) {
+                    this._connector = element;
+                    console.log("pick up connector" + this._connector.getComponent(Element).index);
+          
                 
-                }else
+                } else {
                     this.dropItem(element.getComponent(Element));
-                
+                 
+                }
           
             }, this);
             this.addMove({elementType:"connector",id:this._connector.getComponent(Element).index});
-    
+            console.log("drop connector" + this._connector.getComponent(Element).index);
             this._connector = null;
            // this.connectAll();
         }
     } 
     dropItem(element) {
         
-    
+     console.log("drop item on connector" + element.getComponent(Element).index);
+          
     if(this._spider) {
 
         element._placedItem = this._spider.getComponent(Element);
@@ -586,35 +616,43 @@ export class LevelCreator extends Component {
     }
     saveLevel() {
         let spiders = [];
-           this.spiders.forEach(element => {
+        this.spiders.forEach(element => {
+               if(element&&element.node)
                spiders.push(element.getData());
            });
            let connectors = [];
-           this.connectors.forEach(element => {
+        this.connectors.forEach(element => {
+               if(element&&element.node)
                connectors.push(element.getData());
            });
            let bettles = [];
-           this.bettles.forEach(element => {
+        this.bettles.forEach(element => {
+              if(element&&element.node)
                bettles.push(element.getData());
         });
         let buttons = [];
         this.buttons.forEach(element => {
+              if(element&&element.node)
             buttons.push(element.getData());
      });
      let coins = [];
-     this.coins.forEach(element => {
+        this.coins.forEach(element => {
+          if(element&&element.node)
         coins.push(element.getData());
   });
   let cookies = [];
-  this.cookies.forEach(element => {
+        this.cookies.forEach(element => {
+       if(element&&element.node)
     cookies.push(element.getData());
 });
      let portals = [];
-     this.portals.forEach(element => {
+        this.portals.forEach(element => {
+          if(element&&element.node)
         portals.push(element.getData());
      });
          let treasures = [];
-  this.treasures.forEach(element => {
+        this.treasures.forEach(element => {
+       if(element&&element.node)
     treasures.push(element.getData());
 });
          let  level = {
@@ -672,7 +710,7 @@ export class LevelCreator extends Component {
    // here we tell the reader what to do when it's done reading...
    reader.onload = readerEvent => {
       var content =JSON.parse(readerEvent.target.result); // this is the content!
-       console.log(content);
+       //console.log(content);
        this.resetLevel();
         let connectors = content["connectors"];
        this.connectors = [];
@@ -691,22 +729,28 @@ for(let i=0;i<connectors.length;i++){
                if(element){
                let connector=self.createConnector(element.type,element);
                connector.node.on(Node.EventType.TOUCH_START, () => {
-                   console.log("touch connector"+self._spider +self._bettle +self._button +self._portal +self._cookie +self._coin + self._treasure);
+                   //console.log("touch connector"+self._spider +self._bettle +self._button +self._portal +self._cookie +self._coin + self._treasure);
                    if (!self._spider && !self._bettle && !self._button && !self._portal && !self._cookie && !self._coin && !self._treasure)
                 {    
                 
-                    self._connector =  connector.node;
+                       self._connector = connector.node;
+                        console.log("pick up connector" + this._connector.getComponent(Element).index);
+          
                     
                   
-                }else
-                    this.dropItem(connector);
+                }else{
+                       this.dropItem(connector);
+                        console.log("drop item  on connector" + this._connector.getComponent(Element).index);
+          
+                   }
                 
           
             }, self);
         }
             
           
-  }  
+       }  
+       console.log("connectors count" + this.connectors.length);
        let spiders = content["spiders"];
        this.spiders = [];
        spiders.forEach(element => {
@@ -807,7 +851,7 @@ for(let i=0;i<connectors.length;i++){
        this._coin = null;
        this._cookie = null;
         this._treasure = null;
-        console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
+        //console.log("level" + this.bettles+","+this.connectors+","+ this.spiders);
    }
 
 }
@@ -859,30 +903,37 @@ input.click();
 
     resetLevel() {
         this.spiders.forEach(element => {
+            if(element&&element.node)
             element.node.destroy();
         });
         this.spiders = [];
         this.bettles.forEach(element => {
+            if(element&&element.node)
             element.node.destroy();
         });
           this.bettles = [];
-          this.buttons.forEach(element => {
+        this.buttons.forEach(element => {
+              if(element&&element.node)
             element.node.destroy();
         });
           this.buttons = [];
-          this.portals.forEach(element => {
+        this.portals.forEach(element => {
+              if(element&&element.node)
             element.node.destroy();
         });
           this.portals = [];
         this.connectors.forEach(element => {
+            if(element&&element.node)
             element.node.destroy();
         });
         this.connectors = [];
         this.cookies.forEach(element => {
+            if(element&&element.node)
             element.node.destroy();
         });
         this.cookies = [];
         this.coins.forEach(element => {
+            if(element&&element.node)
             element.node.destroy();
         });
         this.coins = [];

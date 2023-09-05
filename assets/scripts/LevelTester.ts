@@ -150,7 +150,7 @@ export class LevelTester extends Component {
         let found = false;
         let spiders = [];
         for (let i = 0; i < this.spiders.length; i++) {
-            if (!this.spiders[i]._trapped)
+            if (!this.spiders[i]._trapped&&!this.spiders[i]._connectedConnector._hidden)
                 spiders.push(this.spiders[i]);
         }
         let k = 0;

@@ -88,7 +88,7 @@ export class GameElement extends Component {
                     if(this.node.worldPosition.y<this._game.connectors[i].node.worldPosition.y){
                         //top
                         this.neighbors[1] = this._game.connectors[i];
-                        console.log(this.index + "top neighbor"+ this._game.connectors[i].index);
+                      console.log(this.index + "top neighbor"+ this._game.connectors[i].index);
                  
                     }else{
                         //bottom
@@ -182,7 +182,7 @@ export class GameElement extends Component {
         //left,top,bottom,right
         for(let i=0;i<this.neighbors.length;i++){
             if(this.neighbors[i]!=null&&this.neighbors[i].hasPlacedItem("bettle")&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
-                console.log("found bettle");
+                //console.log("found bettle");
                 if(!this.neighbors[i].hasPlacedItem("bettle")._trapped)
                 return this.neighbors[i];
             }
@@ -194,18 +194,19 @@ export class GameElement extends Component {
                 let blocks=[];
                 if(this.neighbors[i]&&(this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,blocks)==true)&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
                    
-                    console.log(directions[i]+"direction found is"+this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,[]));
+                    //console.log(directions[i]+"direction found is"+this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,[]));
                     let count=blocks.length;
                     if(count<minCount)
                     {
-                        selectedNeighbor=this.neighbors[i];
+                        selectedNeighbor = this.neighbors[i];
+                        console.log(this.index+"select neighbor for connector" + directions[i]);
                         minCount=count;
                     }
                 }
             }
             if(this._portal){
                 let blocks=[];
-                console.log("portal direction found is"+this._portal._connectedPortal._connectedConnector.isConnectedTo(0,bettle._connectedConnector,[]));
+                //console.log("portal direction found is"+this._portal._connectedPortal._connectedConnector.isConnectedTo(0,bettle._connectedConnector,[]));
                   
                 if(this._portal._connectedPortal._connectedConnector&&(this._portal._connectedPortal._connectedConnector.isConnectedTo(direction,bettle._connectedConnector,blocks)==true)){
                    
@@ -213,7 +214,8 @@ export class GameElement extends Component {
                     if(count<minCount)
                     {
                         selectedNeighbor=this._portal._connectedPortal._connectedConnector;
-                        minCount=count;
+                        minCount = count;
+                          console.log("select neighbor for portal" );
                     }
                 }
                 
@@ -225,7 +227,7 @@ export class GameElement extends Component {
     }
     isConnectedTo(direction,targetBlock,parsedBlocks){
         let directions=["left","top","right","bottom"];
-        console.log("checking direction "+directions[direction]);
+        //console.log("checking direction "+directions[direction]);
         let value=false;
         if(!this.node||this._hidden){
             return false;
@@ -262,7 +264,7 @@ export class GameElement extends Component {
     
 
     }
-       // console.log("checking direction return"+value);
+       // //console.log("checking direction return"+value);
       
                  return value;
        
@@ -283,7 +285,7 @@ export class GameElement extends Component {
                         this._game.spiders[i].node.parent = this.node;
                         this._game.spiders[i].node.worldPosition = this.node.worldPosition;
                         found = true;
-                          console.log(this._data["placedItem"]["type"] + "connectedConnector" +"in game"+this.index);
+                          //console.log(this._data["placedItem"]["type"] + "connectedConnector" +"in game"+this.index);
              
                         break;
                     }
