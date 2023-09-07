@@ -295,7 +295,6 @@ export class LevelTester extends Component {
 
 
     SelectBlock(block) {
-        block.initializeNeighbours();
         if (!this._playerTurn)
             return;
         if (!block || !block.node)

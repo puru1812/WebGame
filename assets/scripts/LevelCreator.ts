@@ -94,9 +94,9 @@ export class LevelCreator extends Component {
         } else   if(command.elementType=="portal"){
             this.removePortal(command.id);
         }   else   if(command.elementType=="cookie"){
-            this.removePortal(command.id);
+            this.removeCookie(command.id);
         }  else   if(command.elementType=="coin"){
-            this.removePortal(command.id);
+            this.removeCoin(command.id);
         }      else   if(command.elementType=="treasure"){
             this.removeTreasure(command.id);
         }   
@@ -117,22 +117,31 @@ export class LevelCreator extends Component {
             this.spiders[i].index = i;
         }
     }
-    removePortal(index){
+    removePortal(index) {
+        let connectedPortal = null;
         for(let i=0;i<this.portals.length;i++){
-            if(this.portals[i]&&this.portals[i].index==index){
-                if(this.portals[i]._connectedConnector){
+            if (this.portals[i] && this.portals[i].index == index) {
+                
+                if (this.portals[i]._connectedConnector) {
+                  
                     this.portals[i]._connectedConnector._portal=null;
                     this.portals[i]._connectedConnector=null;
                 }
                 this.portals[i].node.destroy();
-              
-              this.portals.splice(i, 1);
+                 connectedPortal = this.portals[i]._connectedPortal;
+             
+
+                console.log(this.portals[i].index +"delete portal" );
+                this.portals.splice(i, 1);
                  break;
             }
         }
         for (let i = 0; i < this.portals.length; i++) {
-            this.spiders[i].index = i;
+            this.portals[i].index = i;
         }
+        if (connectedPortal && connectedPortal.node)
+            this.removePortal(connectedPortal.index);
+      
     }
 
     removeTreasure(index){
@@ -173,8 +182,9 @@ export class LevelCreator extends Component {
 
             if(this.buttons[i]&&this.buttons[i].index==index){
                 if(this.buttons[i]._connectedConnector){
-                    this.buttons[i]._connectedConnector._holdingButton=null;
-                    this.buttons[i]._buttonConnector=null;
+                    this.buttons[i]._connectedConnector._holdingButton = null;
+                    this.removeConnector(this.buttons[i]._buttonConnector.index);
+                    
                     
                 }
                 this.buttons[i].node.destroy();
@@ -238,22 +248,37 @@ export class LevelCreator extends Component {
                 }
                 
                 if (this.connectors[i]._holdingButton) {
-                    this.removeButton(this.connectors[i]._holdingButton);
+                    this.removeButton(this.connectors[i]._holdingButton.index);
                 }
                 if (this.connectors[i]._portal) {
-                    this.removePortal(this.connectors[i]._portal);
+                    this.removePortal(this.connectors[i]._portal.index);
                 }
                 if (this.connectors[i]._holdingCoin) {
-                    this.removeCoin(this.connectors[i]._holdingCoin);
+                    this.removeCoin(this.connectors[i]._holdingCoin.index);
                 }
                 if (this.connectors[i]._holdingCookie) {
-                    this.removeCookie(this.connectors[i]._holdingCookie);
+                    this.removeCookie(this.connectors[i]._holdingCookie.index);
                 }
                 if (this.connectors[i]._holdingTreasure) {
-                    this.removeTreasure(this.connectors[i]._holdingTreasure);
+                    this.removeTreasure(this.connectors[i]._holdingTreasure.index);
+                }
+                for (let i = 0; i < this.buttons.length; i++) {
+
+                    if (this.buttons[i]._connectedConnector.index == this.connectors[i].index) {
+                            this.buttons[i]._connectedConnector._holdingButton = null;
+                            this.buttons[i]._buttonConnector = null;
+
+                     }
+                        this.buttons[i].node.destroy();
+                        this.buttons.splice(i, 1);
+                        break;
+                    
+                }
+                for (let i = 0; i < this.buttons.length; i++) {
+                    this.buttons[i].index = i;
                 }
                 this.connectors[i].node.destroy();
-               this.connectors.splice(i, 1);
+                this.connectors.splice(i, 1);
                  break;
             }
         }
@@ -364,8 +389,10 @@ export class LevelCreator extends Component {
                 }
           
             }, this);
-            this.addMove({elementType:"connector",id:this._connector.getComponent(Element).index});
-            console.log("drop connector" + this._connector.getComponent(Element).index);
+            if (this._connector) {
+                this.addMove({ elementType: "connector", id: this._connector.getComponent(Element).index });
+                console.log("drop connector" + this._connector.getComponent(Element).index);
+            }
             this._connector = null;
            // this.connectAll();
         }
@@ -387,41 +414,43 @@ export class LevelCreator extends Component {
     
                        this._spider = null;
                   
-            
-        }  if (this._bettle) {
+        return;
+        }
+
+        if (this._bettle) {
             element._placedItem = this._bettle.getComponent(Element);
              this._bettle.parent = element.node;
-        this._bettle.position = new Vec3(0, 0, 0);
-                    this._bettle.getComponent(Element)._connectedConnector = element;
-             
-                  
-                     this.addMove({elementType:"bettle",id:this._bettle.getComponent(Element).index});
-     
-                     this._bettle = null;
+             this._bettle.position = new Vec3(0, 0, 0);
+             this._bettle.getComponent(Element)._connectedConnector = element;
+             this.addMove({elementType:"bettle",id:this._bettle.getComponent(Element).index});
+            this._bettle = null;
+            return;
            
         }
         if (this._coin) {
+        
             element._holdingCoin = this._coin.getComponent(Element);
              this._coin.parent = element.node;
-        this._coin.position = new Vec3(0, 0, 0);
+            this._coin.position = new Vec3(0, 0, 0);
                     this._coin.getComponent(Element)._connectedConnector = element;
              
                   
                      this.addMove({elementType:"coin",id:this._coin.getComponent(Element).index});
-     
-                     this._coin = null;
+            console.log("drop coin" + this._coin.getComponent(Element).index);            this._coin = null;
+            return;
            
         }
         if (this._cookie) {
             element._holdingCookie = this._cookie.getComponent(Element);
              this._cookie.parent = element.node;
-        this._cookie.position = new Vec3(0, 0, 0);
+             this._cookie.position = new Vec3(0, 0, 0);
                     this._cookie.getComponent(Element)._connectedConnector = element;
              
                   
                      this.addMove({elementType:"cookie",id:this._cookie.getComponent(Element).index});
      
-                     this._cookie = null;
+            this._cookie = null;
+            return;
            
         }
         if (this._treasure) {
@@ -433,7 +462,8 @@ export class LevelCreator extends Component {
                   
                      this.addMove({elementType:"treasure",id:this._treasure.getComponent(Element).index});
      
-                     this._treasure = null;
+            this._treasure = null;
+            return;
            
         }
         if (this._button) {
@@ -448,7 +478,8 @@ export class LevelCreator extends Component {
                      this._button.getComponent(Element)._buttonConnector= this.createConnectorNow(null,"4");
                      this._button.getComponent(Element)._buttonConnector.setHidden(true);
                      this._button.getComponent(Element)._buttonConnector.text.string= ""+this._button.getComponent(Element).index;
-                    this._button = null;
+            this._button = null;
+            return;
                    
                 }
                 if (this._portal) {
@@ -468,7 +499,8 @@ export class LevelCreator extends Component {
                             }else{
                                 this._previousPortal= this._portal.getComponent(Element);
                             }
-                             this._portal = null;
+                    this._portal = null;
+                    return;
                     }
     }
 
@@ -732,15 +764,16 @@ for(let i=0;i<connectors.length;i++){
                    //console.log("touch connector"+self._spider +self._bettle +self._button +self._portal +self._cookie +self._coin + self._treasure);
                    if (!self._spider && !self._bettle && !self._button && !self._portal && !self._cookie && !self._coin && !self._treasure)
                 {    
-                
+
+                       console.log("pick up connector" + connector.getComponent(Element).index);
                        self._connector = connector.node;
-                        console.log("pick up connector" + this._connector.getComponent(Element).index);
           
                     
                   
-                }else{
+                   } else {
+                       console.log("drop item  on connector" + connector.getComponent(Element).index);
                        this.dropItem(connector);
-                        console.log("drop item  on connector" + this._connector.getComponent(Element).index);
+                      
           
                    }
                 
