@@ -154,15 +154,17 @@ export class LevelTester extends Component {
                 spiders.push(this.spiders[i]);
         }
         let k = 0;
+        let chosenNeighbors = [];
         this.scheduleOnce(() => {
             for (let i = 0; i < spiders.length; i++) {
-                if (!spiders[i]._trapped && !spiders[i]._sleeping && spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[k], i)) {
+                if (!spiders[i]._trapped && !spiders[i]._sleeping && spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[k],  chosenNeighbors)) {
                     if (!spiders[i]._connectedConnector) {
                         this.gameOverScreen.active = true;
                         this.gameOverScreen.setSiblingIndex(this.gameOverScreen.parent.children.length + 1);
 
                     } else {
-                        let chosenNeighbor = spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[k], i);
+                        let chosenNeighbor = spiders[i]._connectedConnector.hasAValidNeighbor(this.bettles[k],chosenNeighbors);
+                        chosenNeighbors.push(chosenNeighbor);
                         if (chosenNeighbor.hasTrappedPlacedItem("spider")) {
                             chosenNeighbor.hasTrappedPlacedItem("spider").setTrapped(false);
 
@@ -175,11 +177,20 @@ export class LevelTester extends Component {
                             this.connectors.splice(index, 1);
                             spiders[i]._connectedConnector.node.destroy();
                         }
+                      
 
                         spiders[i]._connectedConnector = chosenNeighbor;
                         if (spiders[i]._connectedConnector.hasUnTrappedPlacedItem("bettle")) {
                             spiders[i]._connectedConnector.hasUnTrappedPlacedItem("bettle").setTrapped(true);
 
+                        }
+                        if (spiders[i]._connectedConnector._holdingButton) {
+                            spiders[i]._connectedConnector._holdingButton._buttonConnector.node.active = true;
+                            spiders[i]._connectedConnector._holdingButton._buttonConnector._hidden = false;
+                        }
+                        if (chosenNeighbor._holdingButton) {
+                            chosenNeighbor._holdingButton._buttonConnector.node.active = true;
+                            chosenNeighbor._holdingButton._buttonConnector._hidden = false;
                         }
                         chosenNeighbor.addPlacedItem(spiders[i]);
                         spiders[i].node.parent = chosenNeighbor.node;
@@ -260,6 +271,7 @@ export class LevelTester extends Component {
         this.buttons.push(this._button.getComponent(GameElement));
         if (data)
             this._button.getComponent(GameElement).setData(data);
+     
 
         return this._button.getComponent(GameElement);
     }

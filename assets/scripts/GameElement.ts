@@ -175,7 +175,7 @@ export class GameElement extends Component {
          return null;
     }
     
-    hasAValidNeighbor(bettle){
+    hasAValidNeighbor(bettle,chosenNeighbors=[]){
         if(!this.neighbors)
             return null;
      
@@ -198,7 +198,7 @@ export class GameElement extends Component {
                 if (this._portal._connectedPortal._connectedConnector && (this._portal._connectedPortal._connectedConnector.isConnectedTo(d, bettle._connectedConnector, blocks) == true)) {
 
                     let count = this.containsExitBlock(blocks, bettle._connectedConnector);
-                    if (count < minCount ) {
+                    if (count < minCount && chosenNeighbors.indexOf(this._portal._connectedPortal._connectedConnector)<0) {
                         selectedNeighbor = this._portal._connectedPortal._connectedConnector;
                         minCount = count;
                         console.log(count+"select neighbor for portal"  + directions[d]);
@@ -211,7 +211,7 @@ export class GameElement extends Component {
                 if (bettle._connectedConnector._portal && ((this.isConnectedTo(d, bettle._connectedConnector._portal._connectedPortal._connectedConnector, blocks) == true))) {
 
                     let count = this.containsExitBlock(blocks, bettle._connectedConnector._portal._connectedPortal._connectedConnector);
-                    if (count < minCount) {
+                    if (count < minCount && chosenNeighbors.indexOf(this) < 0) {
                         selectedNeighbor = this;
                         minCount = count;
                         console.log(count + "select neighbor for portal" + directions[d]);
@@ -223,21 +223,21 @@ export class GameElement extends Component {
             }  
             for (let i = 0; i < this.neighbors.length; i++) {
                 let blocks = [];
-                if (this.neighbors[i] && (this.neighbors[i].isConnectedTo(d, bettle._connectedConnector, blocks) == true) && !this.neighbors[i]._hidden && this.neighbors[i]._connecterType != 5) {
+                if (this.neighbors[i] && !this.neighbors[i]._hidden && (this.neighbors[i].isConnectedTo(d, bettle._connectedConnector, blocks) == true) && !this.neighbors[i]._hidden && this.neighbors[i]._connecterType != 5) {
 
                     //console.log(directions[i]+"direction found is"+this.neighbors[i].isConnectedTo(i,bettle._connectedConnector,[]));
                     let count = this.containsExitBlock(blocks, bettle._connectedConnector);
-                    if (count < minCount) {
+                    if (count < minCount && chosenNeighbors.indexOf(this.neighbors[i]) < 0) {
                         selectedNeighbor = this.neighbors[i];
                         minCount = count;
                         console.log(count+"select neighbor for portal" +  + directions[d]);
                     }
                 }
                 blocks = [];
-                if (this.neighbors[i] && bettle._connectedConnector._portal && (this.neighbors[i].isConnectedTo(d, bettle._connectedConnector._portal._connectedPortal._connectedConnector, blocks) == true)) {
+                if (this.neighbors[i] && bettle._connectedConnector._portal && !this.neighbors[i]._hidden&& (this.neighbors[i].isConnectedTo(d, bettle._connectedConnector._portal._connectedPortal._connectedConnector, blocks) == true)) {
 
                     let count = this.containsExitBlock(blocks, bettle._connectedConnector);
-                    if (count < minCount) {
+                    if (count < minCount && chosenNeighbors.indexOf(this.neighbors[i]) < 0) {
                         selectedNeighbor = this.neighbors[i];
                         minCount = count;
                         console.log(count + "select neighbor for portal" + directions[d]);
@@ -247,6 +247,23 @@ export class GameElement extends Component {
      
                
         }
+        if (!selectedNeighbor) {
+            for (let j = 0; j < this._game.buttons.length; j++) {
+                for (let d = 0; d < 4; d++) {
+
+                    for (let i = 0; i < this.neighbors.length; i++) {
+                        if (this.neighbors[i] && this._game.buttons[j] && !this.neighbors[i]._hidden && (this.neighbors[i].isConnectedTo(d, this._game.buttons[j]._connectedConnector, []) == true)) {
+
+
+                            selectedNeighbor = this.neighbors[i];
+                            break;
+                        }
+                    }
+
+                }
+            }
+        }
+     
         if (!selectedNeighbor)
             console.log("did not find valid neighbor");
         else 
@@ -260,7 +277,7 @@ export class GameElement extends Component {
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i]._connecterType == 3) {
                 this.isConnectedTo(0, startblock, newblocks);
-                return Math.floor(newblocks.length/2);
+                return Math.floor((newblocks.length + blocks.length)/2);
             }
 
         }
