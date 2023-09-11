@@ -178,7 +178,7 @@ export class GameElement extends Component {
     hasAValidNeighbor(bettle,chosenNeighbors=[]){
         if(!this.neighbors)
             return null;
-     
+        
         //left,top,bottom,right
         for(let i=0;i<this.neighbors.length;i++){
             if(this.neighbors[i]!=null&&this.neighbors[i].hasPlacedItem("bettle")&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
@@ -248,15 +248,22 @@ export class GameElement extends Component {
                
         }
         if (!selectedNeighbor) {
+            let count = 100;
             for (let j = 0; j < this._game.buttons.length; j++) {
                 for (let d = 0; d < 4; d++) {
-
+                  
                     for (let i = 0; i < this.neighbors.length; i++) {
-                        if (this.neighbors[i] && this._game.buttons[j] && !this.neighbors[i]._hidden && (this.neighbors[i].isConnectedTo(d, this._game.buttons[j]._connectedConnector, []) == true)) {
-
-
-                            selectedNeighbor = this.neighbors[i];
-                            break;
+                        let blocks = [];
+                        if (this.neighbors[i] && this._game.buttons[j] && !this.neighbors[i]._hidden && (this.neighbors[i].isConnectedTo(d, this._game.buttons[j]._connectedConnector, blocks) == true)) {
+                          //  console.log(count + " others select neighbor is in " + directions[d]);
+                         
+                            if (blocks.length < count) { 
+                                count = blocks.length;
+                                selectedNeighbor = this.neighbors[i];
+                               
+                            }
+                           
+                            
                         }
                     }
 
