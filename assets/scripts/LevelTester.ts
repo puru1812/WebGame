@@ -84,6 +84,7 @@ export class LevelTester extends Component {
     _holdingHammer = null;
     _holdingSmoke = null;
     _playerTurnBettles = [];
+    exitPoints = [];
 
     CreateBomb() {
         if (this._holdingBomb)

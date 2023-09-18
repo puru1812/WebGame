@@ -53,7 +53,10 @@ export class GameElement extends Component {
             if (customEventData) {
                 this._connecterType = parseInt(customEventData);
      
-                this.face.spriteFrame = this.frames[this._connecterType-1];
+                this.face.spriteFrame = this.frames[this._connecterType - 1];
+                if (this._connecterType == 3) {
+                    this._game.exitPoints.push(this);
+                }
             }
         } 
               
@@ -174,6 +177,40 @@ export class GameElement extends Component {
          }
          return null;
     }
+    getValidNeighBors() {
+        let validNeighBors = [];
+        let count = 100;
+        //console.log("count getValidNeighBors" + this._game.exitPoints.length )
+        for (let i = 0; i < this.neighbors.length; i++) {
+           
+            if (this.neighbors[i] != null && this.neighbors[i].node) {
+                for (let d = 0; d < 4; d++) {
+                        for (let k = 0; k < this._game.exitPoints.length; k++) {
+                            
+                                let blocks = [];
+                                this.neighbors[i].isConnectedTo(d, this._game.exitPoints[k], blocks);
+
+                                //console.log(i+"count" + blocks.length)
+                                if (blocks.length <= count) {
+                                    count = blocks.length;
+                                    if (validNeighBors.indexOf(this.neighbors[i]) >= 0) {
+                                        validNeighBors.splice(validNeighBors.indexOf(this.neighbors[i]), 1);
+                                    }
+                                    validNeighBors.unshift(this.neighbors[i]);
+                                } else {
+                                    if (validNeighBors.indexOf(this.neighbors[i]) < 0) 
+                                    validNeighBors.push(this.neighbors[i]);
+                                }
+                            
+                        
+                    }
+                }
+            }
+        }
+        if (validNeighBors.length>0)
+            return [validNeighBors[0]];
+        return [];
+    }
     
     hasAValidNeighbor(bettle,chosenNeighbors=[]){
         if(!this.neighbors)
@@ -184,8 +221,16 @@ export class GameElement extends Component {
             if(this.neighbors[i]!=null&&this.neighbors[i].hasPlacedItem("bettle")&&!this.neighbors[i]._hidden&&this.neighbors[i]._connecterType!=5){
                 //console.log("found bettle");
                 if(!this.neighbors[i].hasPlacedItem("bettle")._trapped)
-                return this.neighbors[i];
+                    return this.neighbors[i];
+
             }
+           
+        }
+        for (let i = 0; i < this.neighbors.length; i++) {
+            
+            if (this.neighbors[i] != null && bettle._connectedConnector.getValidNeighBors().indexOf(this.neighbors[i]) >= 0)
+                return this.neighbors[i];
+
         }
             let selectedNeighbor=null;
             let minCount=1000;
@@ -462,7 +507,8 @@ export class GameElement extends Component {
             }
              if( this._data["connecterType"])
        { this._connecterType =  this._data["connecterType"];
-         this.face.spriteFrame = this.frames[this._connecterType-1];
+                 this.face.spriteFrame = this.frames[this._connecterType - 1];
+                 this._game.exitPoints.push(this);
         }
         
         }
